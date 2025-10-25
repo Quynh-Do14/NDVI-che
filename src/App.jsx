@@ -1,9 +1,18 @@
-import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
+import { NavLink, Routes, Route, Navigate, Link } from 'react-router-dom'
 import Researcher from './pages/Researcher.jsx'
 import Farmer from './pages/Farmer.jsx'
 import Manager from './pages/Manager.jsx'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Login from './pages/Login/Login.jsx'
+import { Dropdown, Space, Divider } from 'antd'
+import {
+  UserOutlined,
+  LogoutOutlined,
+  DownOutlined,
+  SettingOutlined,
+  ProfileOutlined,
+  KeyOutlined
+} from '@ant-design/icons'
 
 export default function App () {
   const [user, setUser] = useState(null)
@@ -19,7 +28,30 @@ export default function App () {
   const handleLogout = () => {
     localStorage.removeItem('user')
     setUser(null)
+    window.location.href = '/login'
   }
+
+  const items = [
+    {
+      key: 'logout',
+      label: (
+        <Link
+          to='/login'
+          onClick={() => {
+            localStorage.clear()
+            handleLogout()
+          }}
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <Space>
+            <span style={{ color: '#ff4d4f' }}>Đăng xuất</span>
+          </Space>
+        </Link>
+      ),
+      icon: <LogoutOutlined />,
+      danger: true
+    }
+  ]
 
   return (
     <div className='app'>
@@ -82,14 +114,31 @@ export default function App () {
               <span>Nhà quản lý</span>
             </NavLink>
           </nav>
-
-          <div className='user-info'>
-            <div className='user-avatar'>{user?.name?.charAt(0) || 'U'}</div>
-            <div className='user-details'>
-              <span className='user-name'>{user?.name}</span>
-              <span className='user-role'>{user?.role}</span>
-            </div>
-          </div>
+          <Dropdown
+            menu={{ items }}
+            trigger={['click']}
+            placement='bottomRight'
+            overlayClassName='user-dropdown-overlay'
+            overlayStyle={{
+              minWidth: '200px'
+            }}
+          >
+            <a
+              onClick={e => e.preventDefault()}
+              className='header-user-trigger'
+            >
+              <Space className='user-info'>
+                <div className='user-avatar'>
+                  {user?.name?.charAt(0) || <UserOutlined />}
+                </div>
+                <div className='user-details'>
+                  <span className='user-name'>{user?.name}</span>
+                  <span className='user-role'>{user?.role}</span>
+                </div>
+                <DownOutlined style={{ fontSize: '12px', color: '#666' }} />
+              </Space>
+            </a>
+          </Dropdown>
         </div>
       </header>
 
@@ -99,7 +148,7 @@ export default function App () {
           <Route path='/farmer' element={<Farmer />} />
           <Route path='/manager' element={<Manager />} />
           <Route path='*' element={<Navigate to='/researcher' replace />} />
-          {localStorage.getItem('user') == null && (
+          {!localStorage.getItem('user')  && (
             <Route path='/' element={<Login />} />
           )}
         </Routes>

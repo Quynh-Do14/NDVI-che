@@ -52,7 +52,7 @@ export default function Login () {
     const data = await res.json()
     if (data.success) {
       localStorage.setItem('user', JSON.stringify(data))
-      navigate('/researcher')
+      navigate(from, { replace: true })
     } else {
       setError('Tài khoản hoặc mật khẩu không chính xác.')
       return
