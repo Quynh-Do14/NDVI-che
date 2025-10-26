@@ -74,7 +74,7 @@ header .actions {
 
 /* Layout */
 .layout {
-  display: grid;
+  display: flex;
   grid-template-columns: 1.2fr 0.8fr;
   gap: 12px;
   padding: 12px;
