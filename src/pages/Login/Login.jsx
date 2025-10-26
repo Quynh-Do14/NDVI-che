@@ -28,9 +28,9 @@ export default function Login () {
       case 'NGUOIDUNG':
         return '/farmer'
       case 'ADMIN':
-        return '/researcher'
-      case 'QUANLY':
         return '/manager'
+      case 'NGHIENCUU':
+        return '/researcher'
       default:
         return '/login'
     }
