@@ -5,6 +5,7 @@ import { kelvinToCelsius } from '../../helper/helper'
 import Nhatky from './Nhatky'
 import Baocao from './Baocao'
 import KhuyenNghiThoiTiet from './KhuyenNghiThoiTiet'
+import { Col, Row } from 'antd'
 
 // Mapbox token
 mapboxgl.accessToken =
@@ -463,8 +464,8 @@ export default function Farmer () {
         </div>
       </header>
 
-      <div className='layout'>
-        <div className='map-container'>
+      <Row gutter={16} className='layout'>
+        <Col span={14} className='map-container'>
           <div ref={mapDivRef} id='map'></div>
           <div className='controls'>
             <div className='control'>
@@ -520,9 +521,9 @@ export default function Farmer () {
               </div>
             </div>
           </div>
-        </div>
+        </Col>
 
-        <div className='sidebar'>
+        <Col span={10} className='sidebar'>
           <div className='card'>
             <div className='tabs' role='tablist'>
               {[
@@ -598,8 +599,8 @@ export default function Farmer () {
           <footer>
             © 2025 – Nền tảng giám sát sinh trưởng chè (giao diện mẫu nông hộ)
           </footer>
-        </div>
-      </div>
+        </Col>
+      </Row>
     </div>
   )
 }
