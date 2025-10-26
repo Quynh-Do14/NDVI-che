@@ -1,739 +1,805 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import './Manager.css';
+import React, { useEffect, useRef, useState } from 'react'
+import { Card, Table, Button, Slider, Checkbox, Space, Tag } from 'antd'
+import {
+  DownloadOutlined,
+  SendOutlined,
+  EditOutlined,
+  UserOutlined,
+  EnvironmentOutlined
+} from '@ant-design/icons'
+import mapboxgl from 'mapbox-gl'
+import MapboxDraw from '@mapbox/mapbox-gl-draw'
+import Chart from 'chart.js/auto'
+import './Manager.css'
+import { kelvinToCelsius } from '../helper/helper'
 
 // Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1IjoibmdvY3R0ZCIsImEiOiJjbWJibmlod3MwMmluMnFyMG1xMWt0dTdrIn0.ok5SgmXGrHFLeMPf-OG5_w';
-
-// Dữ liệu giả lập
-const regions = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      properties: { id: 'RG01', name: 'Trại 1' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7663, 21.6153], [105.7920, 21.6153], [105.7920, 21.6325],
-          [105.7663, 21.6325], [105.7663, 21.6153]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { id: 'RG02', name: 'Xóm Bãi' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7925, 21.6153], [105.8155, 21.6153], [105.8155, 21.6325],
-          [105.7925, 21.6325], [105.7925, 21.6153]
-        ]]
-      }
-    },
-  ]
-};
-
-const plots = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      properties: { pid: 'P-001', region: 'RG01' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7690, 21.6170], [105.7750, 21.6170], [105.7750, 21.6215],
-          [105.7690, 21.6215], [105.7690, 21.6170]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { pid: 'P-002', region: 'RG01' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7760, 21.6170], [105.7820, 21.6170], [105.7820, 21.6215],
-          [105.7760, 21.6215], [105.7760, 21.6170]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { pid: 'P-003', region: 'RG01' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7690, 21.6220], [105.7750, 21.6220], [105.7750, 21.6265],
-          [105.7690, 21.6265], [105.7690, 21.6220]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { pid: 'P-004', region: 'RG02' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.7950, 21.6170], [105.8005, 21.6170], [105.8005, 21.6215],
-          [105.7950, 21.6215], [105.7950, 21.6170]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { pid: 'P-005', region: 'RG02' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.8012, 21.6170], [105.8067, 21.6170], [105.8067, 21.6215],
-          [105.8012, 21.6215], [105.8012, 21.6170]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { pid: 'P-006', region: 'RG02' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [105.8072, 21.6170], [105.8127, 21.6170], [105.8127, 21.6215],
-          [105.8072, 21.6215], [105.8072, 21.6170]
-        ]]
-      }
-    },
-  ]
-};
-
-const months = ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', 
-               '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12'];
-const idxNames = ['NDVI', 'EVI', 'NDWI', 'LAI', 'CIRE'];
+mapboxgl.accessToken =
+  'pk.eyJ1IjoibmdvY3R0ZCIsImEiOiJjbWJibmlod3MwMmluMnFyMG1xMWt0dTdrIn0.ok5SgmXGrHFLeMPf-OG5_w'
 
 // Utility functions
-function hashCode(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i);
-    h |= 0;
+const fmt = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 })
+
+// Sample data
+const generateSampleData = () => {
+  const days = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (29 - i))
+    return d
+  })
+
+  const ndvi = days.map(() => 0.55 + Math.random() * 0.35)
+  const evi = ndvi.map(v => Math.max(0, v - (0.08 + Math.random() * 0.05)))
+  const ndwi = ndvi.map(v =>
+    Math.max(0, 0.35 + Math.random() * 0.15 - (v - 0.5) * 0.2)
+  )
+
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    return d
+  })
+  const rain7 = last7.map(() => Math.round(Math.random() * 25))
+  const sun7 = last7.map(() => 8 + Math.round(Math.random() * 4))
+
+  return {
+    days,
+    ndvi,
+    evi,
+    ndwi,
+    last7,
+    rain7,
+    sun7,
+    yieldAvg: 1.8 + Math.random() * 0.8,
+    weatherCaps: [
+      '☀️ Nắng nhẹ',
+      '⛅ Ít mây',
+      '🌦️ Có mưa rào',
+      '🌧️ Mưa vừa',
+      '🌤️ Nắng gián đoạn'
+    ],
+    logs: [
+      {
+        key: '1',
+        date: '-3',
+        place: 'Yên Mô',
+        action: 'Tưới nước',
+        cost: 150000
+      },
+      {
+        key: '2',
+        date: '-2',
+        place: 'Tam Điệp',
+        action: 'Phun thuốc sâu',
+        cost: 200000
+      },
+      {
+        key: '3',
+        date: '-1',
+        place: 'Nho Quan',
+        action: 'Bón phân',
+        cost: 320000
+      },
+      {
+        key: '4',
+        date: 'Hôm nay',
+        place: 'Gia Viễn',
+        action: 'Thu hái',
+        cost: 0
+      }
+    ],
+    audits: [
+      {
+        key: '1',
+        ts: '-2h',
+        user: 'manager01',
+        action: 'DUYỆT KHUYẾN CÁO',
+        detail: 'AOI_2025_10_21_01'
+      },
+      {
+        key: '2',
+        ts: '-1h',
+        user: 'manager01',
+        action: 'TẠO AOI',
+        detail: 'AOI_2025_10_23_02'
+      },
+      {
+        key: '3',
+        ts: '-10m',
+        user: 'analyst',
+        action: 'CẬP NHẬT LỚP RỦI RO',
+        detail: 'risk-heat v0.2'
+      }
+    ]
   }
-  return Math.abs(h);
 }
 
-function mulberry32(a) {
-  return function() {
-    let t = a += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
+const Manager = () => {
+  const mapContainer = useRef(null)
+  const chartIndicesRef = useRef(null)
+  const chartWeatherRef = useRef(null)
 
-function synthIndex(ix, m, pid) {
-  const seed = hashCode(ix + m + pid);
-  const rand = mulberry32(seed)();
-  if (ix === 'LAI') return +(1 + rand * 4).toFixed(2);
-  if (ix === 'CIRE') return +(0.5 + rand * 1.5).toFixed(2);
-  return +(0.2 + rand * 0.7).toFixed(2);
-}
-
-function turfBbox(fc) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  (fc.type === 'FeatureCollection' ? fc.features : [fc]).forEach(f => {
-    const coords = f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] :
-      (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.flat(1)[0] : [f.geometry.coordinates]);
-    coords.forEach(c => {
-      const x = c[0], y = c[1];
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x > maxX) maxX = x;
-      if (y > maxY) maxY = y;
-    });
-  });
-  return [[minX, minY], [maxX, maxY]];
-}
-
-function downloadFile(content, filename, mime) {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-export default function Manager() {
-  const mapRef = useRef(null);
-  const mapDivRef = useRef(null);
-
-  // State
-  const [region, setRegion] = useState('all');
-  const [plot, setPlot] = useState('all');
-  const [indexName, setIndexName] = useState('NDVI');
-  const [threshold, setThreshold] = useState(0.40);
-  const [period, setPeriod] = useState('2025-06');
-  const [anon, setAnon] = useState(true);
-  const [dateFrom, setDateFrom] = useState('2025-05-01');
-  const [dateTo, setDateTo] = useState('2025-10-01');
-  const [copyMsg, setCopyMsg] = useState(false);
-  const [plotOptions, setPlotOptions] = useState([]);
+  const [data] = useState(generateSampleData())
+  const [timeIndex, setTimeIndex] = useState(29)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [aoiItems, setAoiItems] = useState([])
   const [layerVisibility, setLayerVisibility] = useState({
-    regions: true,
-    plots: true,
-    centroids: true,
-    labels: true
-  });
+    'tea-regions': true,
+    'tea-plots': true,
+    'risk-heat': true,
+    events: true
+  })
 
-  // Time series data và centroids
-  const timeSeries = useRef({});
-  const centroids = useRef(null);
+  const mapRef = useRef(null)
+  const drawRef = useRef(null)
+  const indicesChartRef = useRef(null)
+  const weatherChartRef = useRef(null)
 
-  // Initialize data
+  // Initialize charts
   useEffect(() => {
-    // Calculate centroids
-    centroids.current = {
-      type: 'FeatureCollection',
-      features: plots.features.map(f => {
-        const xs = f.geometry.coordinates[0].map(c => c[0]);
-        const ys = f.geometry.coordinates[0].map(c => c[1]);
-        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-        return {
-          type: 'Feature',
-          properties: { pid: f.properties.pid, region: f.properties.region },
-          geometry: { type: 'Point', coordinates: [cx, cy] }
-        };
+    // Indices Chart
+    if (chartIndicesRef.current) {
+      const ctx = chartIndicesRef.current.getContext('2d')
+      indicesChartRef.current = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.days.map(d => d.toLocaleDateString('vi-VN')),
+          datasets: [
+            {
+              label: 'NDVI',
+              data: data.ndvi,
+              borderColor: '#059669',
+              tension: 0.3
+            },
+            {
+              label: 'EVI',
+              data: data.evi,
+              borderColor: '#10b981',
+              tension: 0.3
+            },
+            {
+              label: 'NDWI',
+              data: data.ndwi,
+              borderColor: '#06b6d4',
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: ctx =>
+                  `${ctx.dataset.label}: ${fmt.format(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 1.2 }
+          }
+        }
       })
-    };
+    }
 
-    // Generate time series
-    const t = {};
-    plots.features.forEach(f => {
-      const pid = f.properties.pid;
-      t[pid] = {};
-      idxNames.forEach(ix => {
-        t[pid][ix] = {};
-        months.forEach(m => {
-          t[pid][ix][m] = synthIndex(ix, m, pid);
-        });
-      });
-    });
-    timeSeries.current = t;
+    // Weather Chart
+    return () => {
+      indicesChartRef.current?.destroy()
+      weatherChartRef.current?.destroy()
+    }
+  }, [data])
 
-    // Initialize plot options
-    rebuildPlotOptions('all');
-  }, []);
-
-  // Map initialization
+  // Initialize map
   useEffect(() => {
+    if (!mapContainer.current) return
+
     const map = new mapboxgl.Map({
-      container: mapDivRef.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [105.79, 21.623],
-      zoom: 12.6,
-      pitch: 0
-    });
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: [106.0, 20.25],
+      zoom: 10.5,
+      pitch: 30,
+      bearing: -20
+    })
 
-    mapRef.current = map;
+    mapRef.current = map
 
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-    map.addControl(new mapboxgl.ScaleControl());
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'metric' }))
+
+    const draw = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: { polygon: true, trash: true },
+      defaultMode: 'simple_select'
+    })
+    map.addControl(draw, 'top-left')
+    drawRef.current = draw
+
+    // GeoJSON data
+    const teaRegions = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: { name: 'Vùng chè A', risk: 0.3 },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [105.95, 20.25],
+                [106.02, 20.25],
+                [106.02, 20.3],
+                [105.95, 20.3],
+                [105.95, 20.25]
+              ]
+            ]
+          }
+        }
+      ]
+    }
 
     map.on('load', () => {
-      // Add sources
-      map.addSource('regions', { type: 'geojson', data: regions });
-      map.addSource('plots', { type: 'geojson', data: plots });
-      map.addSource('centroids', { type: 'geojson', data: centroids.current });
-
-      // Add layers
+      // Add sources and layers
+      map.addSource('tea-regions', { type: 'geojson', data: teaRegions })
       map.addLayer({
-        id: 'regions-fill',
+        id: 'tea-regions',
         type: 'fill',
-        source: 'regions',
-        paint: { 'fill-color': '#c7d2fe', 'fill-opacity': 0.35 }
-      });
-      map.addLayer({
-        id: 'regions-line',
-        type: 'line',
-        source: 'regions',
-        paint: { 'line-color': '#6366f1', 'line-width': 1.2 }
-      });
-
-      map.addLayer({
-        id: 'plots-fill',
-        type: 'fill',
-        source: 'plots',
-        paint: { 'fill-color': ['get', '_color'], 'fill-opacity': 0.65 }
-      });
-      map.addLayer({
-        id: 'plots-line',
-        type: 'line',
-        source: 'plots',
-        paint: { 'line-color': '#334155', 'line-width': 0.8 }
-      });
-
-      map.addLayer({
-        id: 'centroids',
-        type: 'circle',
-        source: 'centroids',
+        source: 'tea-regions',
         paint: {
-          'circle-radius': 4,
-          'circle-color': '#2563eb',
-          'circle-stroke-color': '#fff',
-          'circle-stroke-width': 1
+          'fill-color': [
+            'interpolate',
+            ['linear'],
+            ['get', 'risk'],
+            0,
+            '#93c5fd',
+            0.5,
+            '#fbbf24',
+            1,
+            '#ef4444'
+          ],
+          'fill-opacity': 0.35
         }
-      });
-
-      map.addLayer({
-        id: 'plots-label',
-        type: 'symbol',
-        source: 'centroids',
-        layout: {
-          'text-field': ['get', 'pid'],
-          'text-size': 11,
-          'text-offset': [0, 1.2]
-        },
-        paint: { 'text-color': '#334155' }
-      });
-
-      // Plot click handler
-      map.on('click', 'plots-fill', (e) => {
-        const f = e.features[0];
-        const pid = f.properties.pid;
-        const rg = f.properties.region;
-        const val = timeSeries.current[pid][indexName][period];
-        
-        new mapboxgl.Popup()
-          .setLngLat(e.lngLat)
-          .setHTML(`
-            <div style="font-weight:600">Lô: ${maskPID(pid)}</div>
-            <div>Vùng: ${rg}</div>
-            <div>${indexName} (${period}): <b>${val}</b></div>
-          `)
-          .addTo(map);
-      });
-
-      // Hover effects
-      map.on('mouseenter', 'plots-fill', () => map.getCanvas().style.cursor = 'pointer');
-      map.on('mouseleave', 'plots-fill', () => map.getCanvas().style.cursor = '');
-
-      applyFiltersAndStyle();
-      fitRegion('all');
-    });
-
-    return () => map.remove();
-  }, []);
-
-  // Update map when filters change
-  useEffect(() => {
-    applyFiltersAndStyle();
-    fillTable();
-  }, [region, plot, indexName, threshold, period, anon]);
-
-  // Rebuild plot options when region changes
-  const rebuildPlotOptions = (regionId) => {
-    const list = plots.features.filter(f => 
-      regionId === 'all' ? true : f.properties.region === regionId
-    );
-    setPlotOptions(list);
-    setPlot('all');
-  };
-
-  const handleRegionChange = (e) => {
-    const value = e.target.value;
-    setRegion(value);
-    rebuildPlotOptions(value);
-    fitRegion(value);
-  };
-
-  const fitRegion = (regionId = region) => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-
-    if (regionId === 'all') {
-      const bbox = turfBbox(regions);
-      map.fitBounds(bbox, { padding: 30, duration: 500 });
-    } else {
-      const feat = regions.features.find(r => r.properties.id === regionId);
-      const bbox = turfBbox(feat);
-      map.fitBounds(bbox, { padding: 30, duration: 500 });
-    }
-    applyFiltersAndStyle();
-  };
-
-  const applyFiltersAndStyle = () => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-
-    const filtered = {
-      type: 'FeatureCollection',
-      features: plots.features.filter(f => {
-        const okR = region === 'all' ? true : f.properties.region === region;
-        const okP = plot === 'all' ? true : f.properties.pid === plot;
-        return okR && okP;
-      }).map(f => {
-        const pid = f.properties.pid;
-        const v = normIndex(indexName, timeSeries.current[pid][indexName][period]);
-        const color = v >= threshold ? '#dcfce7' : '#fee2e2';
-        return {
-          ...f,
-          properties: { ...f.properties, _color: color, _value: v }
-        };
       })
-    };
 
-    map.getSource('plots')?.setData(filtered);
-    
-    // Show/hide labels
-    const showLabel = plot === 'all' ? 'visible' : 'none';
-    map.setLayoutProperty('plots-label', 'visibility', showLabel);
-  };
+      // Add other layers similarly...
+    })
 
-  const normIndex = (ix, val) => {
-    if (ix === 'LAI') return Math.max(0, Math.min(1, (val - 1) / 4));
-    if (ix === 'CIRE') return Math.max(0, Math.min(1, (val - 0.5) / 1.5));
-    return val;
-  };
-
-  const shiftPeriod = (step) => {
-    const [y, m] = period.split('-').map(x => +x);
-    let newM = m + step;
-    let newY = y;
-    
-    if (newM < 1) {
-      newM = 12;
-      newY--;
-    } else if (newM > 12) {
-      newM = 1;
-      newY++;
+    return () => {
+      map.remove()
     }
-    
-    const newPeriod = `${newY}-${String(newM).padStart(2, '0')}`;
-    setPeriod(newPeriod);
-  };
+  }, [])
 
-  const maskPID = (pid) => {
-    return anon ? `ANON-${pid.slice(-3)}` : pid;
-  };
+  const handleTimeSliderChange = value => {
+    setTimeIndex(value)
+    if (mapRef.current?.getLayer('risk-heat')) {
+      const factor = 0.6 + (value / 29) * 0.8
+      mapRef.current.setPaintProperty('risk-heat', 'heatmap-intensity', factor)
+    }
+  }
 
-  const toggleLayer = (key) => {
-    const map = mapRef.current;
-    if (!map) return;
+  const handleDrawAOI = () => {
+    const drawing = !isDrawing
+    setIsDrawing(drawing)
+    if (drawing) {
+      drawRef.current?.changeMode('draw_polygon')
+    } else {
+      drawRef.current?.changeMode('simple_select')
+    }
+  }
 
-    const visibility = {
-      regions: ['regions-fill', 'regions-line'],
-      plots: ['plots-fill', 'plots-line'],
-      centroids: ['centroids'],
-      labels: ['plots-label']
-    }[key];
+  const handleSendFCM = () => {
+    const feats = drawRef.current?.getAll()
+    if (!feats?.features.length) {
+      alert('Chưa có AOI nào được vẽ.')
+      return
+    }
 
-    if (!visibility) return;
+    const f = feats.features[feats.features.length - 1]
+    const id =
+      'AOI_' +
+      new Date()
+        .toISOString()
+        .replace(/[-:.TZ]/g, '')
+        .slice(0, 14)
+    const newAoi = {
+      id,
+      date: new Date().toLocaleString('vi-VN'),
+      status: 'Đã gửi',
+      coords: f.geometry.coordinates[0]
+        .slice(0, 3)
+        .map(c => c.map(v => v.toFixed(4)).join(','))
+    }
 
-    visibility.forEach(id => {
-      const v = map.getLayoutProperty(id, 'visibility');
-      map.setLayoutProperty(id, 'visibility', v === 'none' ? 'visible' : 'none');
-    });
+    setAoiItems(prev => [newAoi, ...prev])
+    alert('Đã gửi khuyến cáo (FCM demo).')
+  }
 
-    setLayerVisibility(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+  const handleExportCSV = () => {
+    const rows = [['Ngày', 'Xã/Huyện', 'Hoạt động', 'Chi phí']].concat(
+      data.logs.map(l => [l.date, l.place, l.action, l.cost])
+    )
+    const csv = rows
+      .map(r =>
+        r.map(v => '"' + String(v).replaceAll('"', '""') + '"').join(',')
+      )
+      .join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'nhat-ky-nong-ho.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
-  const fillTable = () => {
-    const filteredPlots = plots.features.filter(f => 
-      (region === 'all' || f.properties.region === region) && 
-      (plot === 'all' || f.properties.pid === plot)
-    );
-    
-    return filteredPlots.map(f => {
-      const pid = f.properties.pid;
-      const rg = f.properties.region;
-      const raw = timeSeries.current[pid]?.[indexName]?.[period] || 0;
-      const v = normIndex(indexName, raw);
-      const status = v >= threshold ? 'Đạt' : (v >= threshold - 0.05 ? 'Cần theo dõi' : 'Thấp');
-      const pillClass = v >= threshold ? 'pill' : (v >= threshold - 0.05 ? 'pill warn' : 'pill danger');
-      
-      return { pid, rg, raw, status, pillClass };
-    });
-  };
+  const handleExportPDF = () => {
+    const { jsPDF } = window.jspdf
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    doc.setFontSize(14)
+    doc.text('Báo cáo tổng hợp nhật ký nông hộ', 40, 40)
+    doc.setFontSize(10)
+    let y = 70
+    data.logs.forEach(l => {
+      doc.text(
+        `${l.date} | ${l.place} | ${l.action} | ${fmt.format(l.cost)} đ`,
+        40,
+        y
+      )
+      y += 18
+      if (y > 780) {
+        doc.addPage()
+        y = 40
+      }
+    })
+    doc.save('bao-cao-nhat-ky.pdf')
+  }
 
-  const exportCSV = () => {
-    const rows = [['plot_id_anonymous', 'plot_id_real', 'region', 'index', 'period', 'value']];
-    
-    plots.features
-      .filter(f => (region === 'all' || f.properties.region === region) && 
-                   (plot === 'all' || f.properties.pid === plot))
-      .forEach(f => {
-        const pid = f.properties.pid;
-        const rg = f.properties.region;
-        const val = timeSeries.current[pid][indexName][period];
-        rows.push([`ANON-${pid.slice(-3)}`, pid, rg, indexName, period, val]);
-      });
+  const handleLayerToggle = (layer, checked) => {
+    setLayerVisibility(prev => ({ ...prev, [layer]: checked }))
+    if (mapRef.current?.getLayer(layer)) {
+      mapRef.current.setLayoutProperty(
+        layer,
+        'visibility',
+        checked ? 'visible' : 'none'
+      )
+    }
+  }
 
-    const csv = rows.map(r => r.join(',')).join('\n');
-    downloadFile(csv, `tea_${indexName}_${period}.csv`, 'text/csv');
-  };
+  // Calculate averages
+  const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length
+  const ndviAvg = avg(data.ndvi)
+  const ndwiAvg = avg(data.ndwi)
+  const eviAvg = avg(data.evi)
 
-  const exportGeoJSON = () => {
-    const data = {
-      type: 'FeatureCollection',
-      features: plots.features
-        .filter(f => (region === 'all' || f.properties.region === region) && 
-                     (plot === 'all' || f.properties.pid === plot))
-        .map(f => {
-          const pid = f.properties.pid;
-          const rg = f.properties.region;
-          const raw = timeSeries.current[pid][indexName][period];
-          return {
-            type: 'Feature',
-            properties: {
-              plot_id: pid,
-              plot_id_anonymous: `ANON-${pid.slice(-3)}`,
-              region: rg,
-              index: indexName,
-              period: period,
-              value: raw,
-              meets_threshold: normIndex(indexName, raw) >= threshold
+  // Table columns
+
+  const auditColumns = [
+    { title: 'Thời gian', dataIndex: 'ts', key: 'ts' },
+    { title: 'Người dùng', dataIndex: 'user', key: 'user' },
+    { title: 'Hành động', dataIndex: 'action', key: 'action' },
+    { title: 'Chi tiết', dataIndex: 'detail', key: 'detail' }
+  ]
+  const [weatherData, setWeatherData] = useState([])
+  const [currentWeather, setCurrentWeather] = useState({})
+  const [mainWeather, setMainWeather] = useState('')
+  const [rainTotal, setRainTotal] = useState(0)
+  const [logColumns, setLogForm] = useState([])
+
+  const onGetWeather = async () => {
+    try {
+      const res = await fetch(
+        'https://api.openweathermap.org/data/2.5/forecast?lat=21.0245&lon=105.8412&appid=723262eea804eb2695383fc4d482da35'
+        // KHÔNG cần headers với OpenWeatherMap API
+      )
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      const data = await res.json()
+      console.log('data', data)
+      setWeatherData(data.list)
+    } catch (err) {
+      console.log('Error:', err)
+    }
+  }
+  const onGetCurrentWeather = async () => {
+    try {
+      const res = await fetch(
+        'https://api.openweathermap.org/data/2.5/weather?q=Hanoi&appid=723262eea804eb2695383fc4d482da35'
+        // KHÔNG cần headers với OpenWeatherMap API
+      )
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      const data = await res.json()
+      console.log('data', data)
+      setCurrentWeather(data)
+    } catch (err) {
+      console.log('Error:', err)
+    }
+  }
+
+  const onGetDataDiary = async () => {
+    fetch('http://103.163.119.247:33612/nhatky')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok')
+        }
+        return response.json() // Chuyển đổi dữ liệu trả về thành JSON
+      })
+      .then(data => {
+        if (data.success) {
+          setLogForm(data.data)
+        }
+      })
+      .catch(error => {
+        console.log('error', error)
+      })
+  }
+
+  useEffect(() => {
+    onGetWeather()
+    onGetCurrentWeather()
+    onGetDataDiary()
+  }, [])
+
+  useEffect(() => {
+    if (chartWeatherRef.current) {
+      // Xóa chart cũ
+      if (weatherChartRef.current) {
+        weatherChartRef.current.destroy()
+      }
+
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date()
+        d.setDate(d.getDate() - (6 - i))
+        return d.toLocaleDateString('vi-VN')
+      })
+      const temp = weatherData.map(item => kelvinToCelsius(item.main.temp))
+      const rain = weatherData.map(item => item?.rain?.['3h'] || 0)
+      const ctx = chartWeatherRef.current.getContext('2d')
+      weatherChartRef.current = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: last7Days,
+          datasets: [
+            {
+              label: 'Nhiệt độ (°C)',
+              data: temp,
+              backgroundColor: '#f59e0b'
             },
-            geometry: f.geometry
-          };
-        })
-    };
+            {
+              label: 'Lượng mưa (mm)',
+              data: rain,
+              backgroundColor: '#3b82f6'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } }
+        }
+      })
+    }
 
-    downloadFile(JSON.stringify(data), `tea_${indexName}_${period}.geojson`, 'application/geo+json');
-  };
+    const weather7Day = weatherData.slice(0, 7)
+    const totalRin = weather7Day.reduce((acc, item) => {
+      const date = acc + (item?.rain?.['3h'] || 0)
+      return date
+    }, 0)
+    setRainTotal(totalRin)
+  }, [weatherData])
 
-  const copyAPI = () => {
-    const url = `https://api.example.org/research/tea-index?index=${indexName}&period=${period}&region=${region}&plot=${plot}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopyMsg(true);
-      setTimeout(() => setCopyMsg(false), 1500);
-    });
-  };
+  useEffect(() => {
+    const current = currentWeather?.weather?.[0]?.main
+    if (!current) return
 
-  const analyzeData = () => {
-    const feats = plots.features.filter(f => 
-      region === 'all' ? true : f.properties.region === region
-    );
-    const vals = feats.map(f => timeSeries.current[f.properties.pid][indexName][period]);
-    const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
-    alert(`Trung bình ${indexName} (${period})${region === 'all' ? ' toàn bộ' : ' của ' + region}: ${avg}`);
-  };
-
-  const tableData = fillTable();
+    switch (current) {
+      case 'Clear':
+        setMainWeather('☀️ Trời nắng')
+        break
+      case 'Clouds':
+        setMainWeather('⛅ Nhiều mây')
+        break
+      case 'Rain':
+        setMainWeather('🌧️ Mưa')
+        break
+      case 'Drizzle':
+        setMainWeather('🌦️ Mưa phùn')
+        break
+      case 'Thunderstorm':
+        setMainWeather('⛈️ Giông bão')
+        break
+      case 'Snow':
+        setMainWeather('❄️ Tuyết')
+        break
+      case 'Mist':
+        setMainWeather('🌫️ Sương mù')
+        break
+      case 'Smoke':
+        setMainWeather('💨 Khói')
+        break
+      case 'Haze':
+        setMainWeather('😶‍🌫️ Mù nhẹ')
+        break
+      case 'Dust':
+        setMainWeather('💨 Bụi')
+        break
+      case 'Fog':
+        setMainWeather('🌁 Sương mù dày')
+        break
+      case 'Sand':
+        setMainWeather('🌪️ Bão cát')
+        break
+      case 'Ash':
+        setMainWeather('🌋 Tro núi lửa')
+        break
+      case 'Squall':
+        setMainWeather('💨 Gió giật')
+        break
+      case 'Tornado':
+        setMainWeather('🌪️ Lốc xoáy')
+        break
+      default:
+        setMainWeather('🌈 Thời tiết bình thường')
+    }
+  }, [currentWeather])
 
   return (
-    <div className="app">
-      <header>
-        <div className="title">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z" fill="#2563eb"/>
-            <path d="M21 12l-9 4.5-9-4.5" stroke="#60a5fa" strokeWidth="1.2"/>
-            <path d="M21 16.5L12 21 3 16.5" stroke="#93c5fd" strokeWidth="1.2"/>
-          </svg>
-          <div>
-            <div className="title-row">
-              <h1>Giám sát sinh trưởng chè – Không gian nhà nghiên cứu</h1>
-              <span className="badge anonym" title="Dữ liệu đã ẩn danh">Ẩn danh</span>
-              <span className="badge">Read‑only API</span>
-            </div>
-            <div className="hint">
-              Truy cập dữ liệu ẩn danh, tải thống kê chỉ số GEE theo lô/vùng, xuất CSV/GeoJSON (demo, không gọi endpoint thật).
+    <div className='manager-dashboard'>
+      {/* Header */}
+      <header className='dashboard-header'>
+        <div className='header-content'>
+          <div className='logo-section'>
+            <div className='logo'>Tea</div>
+            <div>
+              <h1>Dashboard Nhà quản lý</h1>
+              <span className='tagline'>
+                Giám sát vùng/lô chè • NDVI/EVI/NDWI • Khuyến cáo AOI • FCM
+              </span>
             </div>
           </div>
-        </div>
-        <div className="header-actions">
-          <button className="btn" onClick={exportCSV}>Tải CSV</button>
-          <button className="btn" onClick={exportGeoJSON}>Tải GeoJSON</button>
+          <div className='header-actions'>
+            <div className='weather-info'>
+              <span>{mainWeather}</span>
+            </div>
+            <div className='date-info'>
+              <span>Hôm nay:</span>
+              <strong>{new Date().toLocaleDateString('vi-VN')}</strong>
+            </div>
+            <div className='user-avatar'>👤</div>
+          </div>
         </div>
       </header>
 
-      <div className="container">
-        <aside className="panel" id="filters">
-          <h3>Bộ lọc & tham số</h3>
-          
-          <div className="group">
-            <label>Vùng chè</label>
-            <select id="selRegion" className="input" value={region} onChange={handleRegionChange}>
-              <option value="all">Tất cả vùng</option>
-              <option value="RG01">RG01 – Trại 1</option>
-              <option value="RG02">RG02 – Xóm Bãi</option>
-            </select>
-          </div>
-
-          <div className="group">
-            <label>Lô chè</label>
-            <select id="selPlot" className="input" value={plot} onChange={(e) => setPlot(e.target.value)}>
-              <option value="all">Tất cả lô</option>
-              {plotOptions.map(f => (
-                <option key={f.properties.pid} value={f.properties.pid}>
-                  {f.properties.pid}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="group">
-            <label>Chỉ số GEE</label>
-            <select id="selIndex" className="input" value={indexName} onChange={(e) => setIndexName(e.target.value)}>
-              {idxNames.map(name => (
-                <option key={name}>{name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="group">
-            <label>Khoảng thời gian</label>
-            <input 
-              id="dateFrom" 
-              className="input" 
-              type="date" 
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-            <div style={{ height: '6px' }}></div>
-            <input 
-              id="dateTo" 
-              className="input" 
-              type="date" 
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-
-          <div className="group">
-            <label>Ngưỡng tô màu theo chỉ số (<span id="threshVal">{threshold.toFixed(2)}</span>)</label>
-            <input 
-              id="threshold" 
-              className="range" 
-              type="range" 
-              min="0" 
-              max="1" 
-              step="0.01" 
-              value={threshold}
-              onChange={(e) => setThreshold(parseFloat(e.target.value))}
-            />
-          </div>
-
-          <div className="group checkbox">
-            <div 
-              className={`switch ${anon ? 'on' : ''}`}
-              role="switch"
-              aria-label="Chế độ ẩn danh"
-              tabIndex="0"
-              onClick={() => setAnon(!anon)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setAnon(!anon);
-                }
-              }}
-            ></div>
-            <div>
-              <div style={{ fontWeight: '600' }}>Chế độ ẩn danh</div>
-              <div className="hint">Ẩn tên hộ, mã lô thực; chỉ hiển thị ID giả lập.</div>
-            </div>
-          </div>
-
-          <div className="group">
-            <label>Tải dữ liệu</label>
-            <div className="actions">
-              <button className="btn" onClick={exportCSV}>Xuất CSV</button>
-              <button className="btn" onClick={exportGeoJSON}>Xuất GeoJSON</button>
-            </div>
-            <div style={{ height: '8px' }}></div>
-            <button className="btn ghost" onClick={copyAPI} title="Sao chép URL API chỉ‑đọc (demo)">
-              Copy API (read‑only)
-            </button>
-            <div className="hint" style={{ display: copyMsg ? 'block' : 'none', marginTop: '6px' }}>
-              Đã sao chép URL ví dụ.
-            </div>
-          </div>
-
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '12px 0' }} />
-
-          <div className="group">
-            <label>Lớp hiển thị</label>
-            <div className="layer-controls">
-              <button className="btn tool" onClick={() => toggleLayer('regions')}>Vùng</button>
-              <button className="btn tool" onClick={() => toggleLayer('plots')}>Lô</button>
-              <button className="btn tool" onClick={() => toggleLayer('centroids')}>Tâm lô</button>
-              <button className="btn tool" onClick={() => toggleLayer('labels')}>Nhãn</button>
-            </div>
-          </div>
-
-          <div className="hint">
-            Lưu ý: Raster chỉ số được mô phỏng bằng tô màu theo ngưỡng cho lô chè.
-          </div>
+      {/* Main Content */}
+      <div className='dashboard-content'>
+        {/* Sidebar */}
+        <aside className='sidebar'>
+          <Card className='sidebar-card'>
+            <h3>Menu</h3>
+            <nav className='sidebar-nav'>
+              <a href='#mapPanel'>Tổng quan</a>
+              <a href='#indicesPanel'>Chỉ số GEE</a>
+              <a href='#weatherPanel'>Thời tiết</a>
+              <a href='#logsPanel'>Nhật ký nông hộ</a>
+              <a href='#aoiPanel'>Khuyến cáo (AOI)</a>
+              <a href='#reportPanel'>Báo cáo & Audit</a>
+            </nav>
+          </Card>
         </aside>
 
-        <section className="main">
-          <div className="mapwrap">
-            <div ref={mapDivRef} id="map"></div>
-            <div className="toolbar">
-              <button className="tool" onClick={() => fitRegion()}>Fit toàn vùng</button>
-              <button className="tool" onClick={() => shiftPeriod(-1)}>◀ Tháng trước</button>
-              <div className="tool period-display">
-                <span className="hint">Kỳ:</span>
-                <strong>{period}</strong>
-              </div>
-              <button className="tool" onClick={() => shiftPeriod(1)}>Tháng sau ▶</button>
-            </div>
-            <div className="legend" id="legend">
-              <div><strong>Chú giải (theo ngưỡng)</strong></div>
-              <div className="row">
-                <span className="swatch" style={{ background: '#dcfce7' }}></span>
-                Chỉ số ≥ ngưỡng
-              </div>
-              <div className="row">
-                <span className="swatch" style={{ background: '#fee2e2' }}></span>
-                Chỉ số &lt; ngưỡng
-              </div>
-            </div>
-          </div>
+        {/* Main Content */}
+        <main className='main-content'>
+          {/* Info Cards */}
+          <section className='info-cards'>
+            <Card className='info-card'>
+              <p className='card-label'>NDVI TB</p>
+              <h3 className='card-value text-green-700'>
+                {fmt.format(ndviAvg)}
+              </h3>
+              <p className='card-desc'>—</p>
+            </Card>
+            <Card className='info-card'>
+              <p className='card-label'>EVI TB</p>
+              <h3 className='card-value text-emerald-700'>
+                {fmt.format(eviAvg)}
+              </h3>
+              <p className='card-desc'>30 ngày</p>
+            </Card>
+            <Card className='info-card'>
+              <p className='card-label'>NDWI TB</p>
+              <h3 className='card-value text-cyan-700'>
+                {fmt.format(ndwiAvg)}
+              </h3>
+              <p className='card-desc'>Độ ẩm tán</p>
+            </Card>
+            <Card className='info-card'>
+              <p className='card-label'>Mưa 7 ngày</p>
+              <h3 className='card-value text-blue-700'>{rainTotal}</h3>
+              <p className='card-desc'>mm</p>
+            </Card>
+            <Card className='info-card'>
+              <p className='card-label'>Năng suất dự báo</p>
+              <h3 className='card-value text-amber-700'>
+                {fmt.format(data.yieldAvg)}
+              </h3>
+              <p className='card-desc'>tấn/ha</p>
+            </Card>
+          </section>
 
-          <div className="tablewrap">
-            <div className="tablehead">
-              <div className="table-title">
-                <strong>Kết quả thống kê</strong>
-                <span className="hint">(ẩn danh)</span>
+          {/* Map Panel */}
+          <section id='mapPanel' className='map-panel'>
+            <Card>
+              <div className='card-header'>
+                <h3>Bản đồ vùng/lô chè & lớp rủi ro</h3>
+                <Space>
+                  <div className='time-slider'>
+                    <span>Thời gian</span>
+                    <Slider
+                      min={0}
+                      max={29}
+                      value={timeIndex}
+                      onChange={handleTimeSliderChange}
+                      style={{ width: 120 }}
+                    />
+                    <span className='time-label'>
+                      {data.days[timeIndex]?.toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                  <Button
+                    type='primary'
+                    icon={<EditOutlined />}
+                    onClick={handleDrawAOI}
+                    className={isDrawing ? 'active-draw' : ''}
+                  >
+                    Vẽ AOI
+                  </Button>
+                  <Button
+                    type='primary'
+                    icon={<SendOutlined />}
+                    onClick={handleSendFCM}
+                    disabled={!isDrawing}
+                  >
+                    Gửi FCM
+                  </Button>
+                </Space>
               </div>
-              <div className="table-actions">
-                <button className="btn" onClick={() => { applyFiltersAndStyle(); fillTable(); }}>Làm mới</button>
-                <button className="btn primary" onClick={analyzeData}>Tính tóm tắt</button>
+              <div ref={mapContainer} className='map-container' />
+              <div className='layer-controls'>
+                <Checkbox
+                  checked={layerVisibility['tea-regions']}
+                  onChange={e =>
+                    handleLayerToggle('tea-regions', e.target.checked)
+                  }
+                >
+                  Vùng chè
+                </Checkbox>
+                <Checkbox
+                  checked={layerVisibility['tea-plots']}
+                  onChange={e =>
+                    handleLayerToggle('tea-plots', e.target.checked)
+                  }
+                >
+                  Lô chè
+                </Checkbox>
+                <Checkbox
+                  checked={layerVisibility['risk-heat']}
+                  onChange={e =>
+                    handleLayerToggle('risk-heat', e.target.checked)
+                  }
+                >
+                  Rủi ro
+                </Checkbox>
+                <Checkbox
+                  checked={layerVisibility['events']}
+                  onChange={e => handleLayerToggle('events', e.target.checked)}
+                >
+                  Sự kiện
+                </Checkbox>
               </div>
+            </Card>
+          </section>
+
+          {/* Charts Section */}
+          <section id='indicesPanel' className='charts-section'>
+            <div className='chart-main'>
+              <Card>
+                <div className='card-header'>
+                  <h3>Chuỗi chỉ số NDVI / EVI / NDWI (30 ngày)</h3>
+                  <span className='chart-source'>
+                    Nguồn: GEE (demo dữ liệu giả lập)
+                  </span>
+                </div>
+                <canvas ref={chartIndicesRef} height='110' />
+              </Card>
             </div>
-            <table className="table" id="resultTable">
-              <thead>
-                <tr>
-                  <th>ID lô (ẩn danh)</th>
-                  <th>Vùng</th>
-                  <th>Chỉ số</th>
-                  <th>Kỳ</th>
-                  <th>Giá trị TB</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map(item => (
-                  <tr key={item.pid}>
-                    <td>{maskPID(item.pid)}</td>
-                    <td>{item.rg}</td>
-                    <td>{indexName}</td>
-                    <td>{period}</td>
-                    <td>{item.raw}</td>
-                    <td><span className={item.pillClass}>{item.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div id='weatherPanel' className='chart-weather'>
+              <Card>
+                <h3>Nhiệt độ – Lượng mưa (7 ngày)</h3>
+                <canvas ref={chartWeatherRef} height='180' />
+              </Card>
+            </div>
+          </section>
+
+          {/* Logs & AOI Section */}
+          <section id='logsPanel' className='logs-section'>
+            <div className='logs-table'>
+              <Card>
+                <div className='card-header'>
+                  <h3>Nhật ký nông hộ gần đây</h3>
+                  <Space>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      onClick={handleExportCSV}
+                    >
+                      Xuất CSV
+                    </Button>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      onClick={handleExportPDF}
+                    >
+                      Xuất PDF
+                    </Button>
+                  </Space>
+                </div>
+                <Table
+                  dataSource={data.logs}
+                  columns={logColumns}
+                  pagination={false}
+                  size='small'
+                />
+              </Card>
+            </div>
+            <div id='aoiPanel' className='aoi-list'>
+              <Card>
+                <h3>Khuyến cáo vùng (AOI)</h3>
+                <div className='aoi-items'>
+                  {aoiItems.map(aoi => (
+                    <div key={aoi.id} className='aoi-item'>
+                      <div className='aoi-info'>
+                        <div className='aoi-title'>{aoi.id}</div>
+                        <div className='aoi-meta'>
+                          {aoi.date} • <Tag color='green'>{aoi.status}</Tag>
+                        </div>
+                        <div className='aoi-coords'>
+                          Mẫu tọa độ: {aoi.coords}
+                        </div>
+                      </div>
+                      <Button size='small' icon={<EnvironmentOutlined />}>
+                        Xem trên bản đồ
+                      </Button>
+                    </div>
+                  ))}
+                  {aoiItems.length === 0 && (
+                    <div className='empty-aoi'>Chưa có khuyến cáo nào</div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          </section>
+
+          {/* Audit Section */}
+          <section id='reportPanel' className='audit-section'>
+            <Card>
+              <h3>Audit Log</h3>
+              <Table
+                dataSource={data.audits}
+                columns={auditColumns}
+                pagination={false}
+                size='small'
+              />
+            </Card>
+          </section>
+        </main>
       </div>
     </div>
-  );
+  )
 }
+
+export default Manager

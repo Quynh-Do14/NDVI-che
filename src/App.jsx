@@ -1,6 +1,5 @@
 import { NavLink, Routes, Route, Navigate, Link } from 'react-router-dom'
 import Researcher from './pages/Researcher.jsx'
-import Farmer from './pages/Farmer.jsx'
 import Manager from './pages/Manager.jsx'
 import React, { useState, useEffect } from 'react'
 import Login from './pages/Login/Login.jsx'
@@ -13,6 +12,7 @@ import {
   ProfileOutlined,
   KeyOutlined
 } from '@ant-design/icons'
+import Farmer from './pages/Farmer/Farmer.jsx'
 
 export default function App () {
   const [user, setUser] = useState(null)
@@ -52,105 +52,65 @@ export default function App () {
       danger: true
     }
   ]
+  const localUser = JSON.parse(localStorage.getItem('user'))?.data
 
   return (
     <div className='app'>
-      <header className='header'>
-        <div className='header-content'>
-          <div className='logo'>
-            <div className='logo-icon'>
-              <svg
-                width='28'
-                height='28'
-                viewBox='0 0 24 24'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path d='M12 3l9 4.5-9 4.5-9-4.5L12 3z' fill='#059669' />
-                <path
-                  d='M21 12l-9 4.5-9-4.5'
-                  stroke='#34d399'
-                  strokeWidth='1.2'
-                />
-                <path
-                  d='M21 16.5L12 21 3 16.5'
-                  stroke='#a7f3d0'
-                  strokeWidth='1.2'
-                />
-              </svg>
-            </div>
-            <div className='logo-text'>
-              <h1>Tea Monitor</h1>
-              <span className='tagline'>Hệ thống giám sát sinh trưởng chè</span>
-            </div>
-          </div>
-
-          <nav className='navigation'>
-            <NavLink
-              to='/researcher'
-              className={({ isActive }) =>
-                `nav-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <div className='nav-icon'>🔬</div>
-              <span>Nhà nghiên cứu</span>
-            </NavLink>
-            <NavLink
-              to='/farmer'
-              className={({ isActive }) =>
-                `nav-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <div className='nav-icon'>👩‍🌾</div>
-              <span>Nông hộ</span>
-            </NavLink>
-            <NavLink
-              to='/manager'
-              className={({ isActive }) =>
-                `nav-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <div className='nav-icon'>📊</div>
-              <span>Nhà quản lý</span>
-            </NavLink>
-          </nav>
-          <Dropdown
-            menu={{ items }}
-            trigger={['click']}
-            placement='bottomRight'
-            overlayClassName='user-dropdown-overlay'
-            overlayStyle={{
-              minWidth: '200px'
-            }}
-          >
-            <a
-              onClick={e => e.preventDefault()}
-              className='header-user-trigger'
-            >
-              <Space className='user-info'>
-                <div className='user-avatar'>
-                  {user?.name?.charAt(0) || <UserOutlined />}
-                </div>
-                <div className='user-details'>
-                  <span className='user-name'>{user?.name}</span>
-                  <span className='user-role'>{user?.role}</span>
-                </div>
-                <DownOutlined style={{ fontSize: '12px', color: '#666' }} />
-              </Space>
-            </a>
-          </Dropdown>
-        </div>
-      </header>
-
       <main className='main-content'>
         <Routes>
-          <Route path='/researcher' element={<Researcher />} />
-          <Route path='/farmer' element={<Farmer />} />
-          <Route path='/manager' element={<Manager />} />
-          <Route path='*' element={<Navigate to='/researcher' replace />} />
-          {!localStorage.getItem('user')  && (
-            <Route path='/' element={<Login />} />
+          {/* Route công khai */}
+          <Route path='/login' element={<Login />} />
+
+          {/* Route theo role */}
+          {localUser?.role === 'NGUOIDUNG' && (
+            <Route path='/farmer' element={<Farmer />} />
           )}
+          {localUser?.role === 'ADMIN' && (
+            <Route path='/researcher' element={<Researcher />} />
+          )}
+          {localUser?.role === 'QUANLY' && (
+            <Route path='/manager' element={<Manager />} />
+          )}
+
+          {/* Redirect mặc định */}
+          <Route
+            path='/'
+            element={
+              localUser ? (
+                localUser.role === 'NGUOIDUNG' ? (
+                  <Navigate to='/farmer' />
+                ) : localUser.role === 'ADMIN' ? (
+                  <Navigate to='/researcher' />
+                ) : localUser.role === 'QUANLY' ? (
+                  <Navigate to='/manager' />
+                ) : (
+                  <Navigate to='/login' />
+                )
+              ) : (
+                <Navigate to='/login' />
+              )
+            }
+          />
+
+          {/* Redirect cho các route không tồn tại */}
+          <Route
+            path='*'
+            element={
+              localUser ? (
+                localUser.role === 'NGUOIDUNG' ? (
+                  <Navigate to='/farmer' />
+                ) : localUser.role === 'ADMIN' ? (
+                  <Navigate to='/researcher' />
+                ) : localUser.role === 'QUANLY' ? (
+                  <Navigate to='/manager' />
+                ) : (
+                  <Navigate to='/login' />
+                )
+              ) : (
+                <Navigate to='/login' />
+              )
+            }
+          />
         </Routes>
       </main>
     </div>

@@ -13,8 +13,6 @@ export default function Login () {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/researcher'
-
   const handleInputChange = e => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -25,37 +23,70 @@ export default function Login () {
     if (error) setError('')
   }
 
+  const getRedirectPathByRole = role => {
+    switch (role) {
+      case 'NGUOIDUNG':
+        return '/farmer'
+      case 'ADMIN':
+        return '/researcher'
+      case 'QUANLY':
+        return '/manager'
+      default:
+        return '/login'
+    }
+  }
+
   const handleSubmit = async e => {
-    setIsLoading(true)
     e.preventDefault()
+    setIsLoading(true)
     setError('')
-    if (formData.username == '' && formData.password == '') {
+
+    // Validate form
+    if (!formData.username || !formData.password) {
       setError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.')
+      setIsLoading(false)
       return
     }
-    const res = await fetch('http://103.163.119.247:33612/dangnhap', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-        // 'Authorization': 'Bearer your_token_here' nếu cần
-      },
-      body: JSON.stringify({
-        us: formData.username,
-        pa: formData.password
+
+    try {
+      const res = await fetch('http://103.163.119.247:33612/dangnhap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          us: formData.username,
+          pa: formData.password
+        })
       })
-    })
 
-    if (!res.ok) {
-      throw new Error('Request failed')
-    }
+      if (!res.ok) {
+        throw new Error('Request failed')
+      }
 
-    const data = await res.json()
-    if (data.success) {
-      localStorage.setItem('user', JSON.stringify(data))
-      navigate(from, { replace: true })
-    } else {
-      setError('Tài khoản hoặc mật khẩu không chính xác.')
-      return
+      const data = await res.json()
+
+      if (data.success) {
+        // Lưu thông tin user vào localStorage
+        localStorage.setItem('user', JSON.stringify(data))
+
+        // Lấy role từ response
+        const userRole = data.data?.role
+        console.log('userRole', userRole)
+
+        // Xác định đường dẫn redirect dựa trên role
+        const redirectPath = getRedirectPathByRole(userRole)
+
+        // Redirect đến trang tương ứng với role
+        navigate(redirectPath, { replace: true })
+      } else {
+        setError('Tài khoản hoặc mật khẩu không chính xác.')
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Lỗi kết nối. Vui lòng thử lại sau.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -128,6 +159,7 @@ export default function Login () {
                 disabled={isLoading}
               />
             </div>
+
             <button type='submit' className='login-button' disabled={isLoading}>
               {isLoading ? (
                 <>
