@@ -5,7 +5,13 @@ import { kelvinToCelsius } from '../../helper/helper'
 import Nhatky from './Nhatky'
 import Baocao from './Baocao'
 import KhuyenNghiThoiTiet from './KhuyenNghiThoiTiet'
-import { Col, Row } from 'antd'
+import { Col, Dropdown, Menu, Row } from 'antd'
+import Thongkenhatky from './Thongkenhatky'
+import {
+  LogoutOutlined,
+  SettingOutlined,
+  UserOutlined as UserIcon
+} from '@ant-design/icons'
 
 // Mapbox token
 mapboxgl.accessToken =
@@ -458,9 +464,30 @@ export default function Farmer () {
           <span className='pill'>
             🔔 <span>{userData.incidents.length}</span>
           </span>
-          <span className='pill'>
-            {JSON.parse(localStorage.getItem('user'))?.data?.ten}
-          </span>
+          <Dropdown
+            overlay={
+              <Menu>
+                <Menu.Item
+                  key='logout'
+                  icon={<LogoutOutlined />}
+                  danger
+                  onClick={() => {
+                    localStorage.clear()
+                    sessionStorage.clear()
+                    window.location.href = '/login'
+                  }}
+                >
+                  Đăng xuất
+                </Menu.Item>
+              </Menu>
+            }
+            placement='bottomRight'
+            arrow
+          >
+            <span className='pill'>
+              {JSON.parse(localStorage.getItem('user'))?.data?.ten}
+            </span>
+          </Dropdown>
         </div>
       </header>
 
@@ -573,28 +600,7 @@ export default function Farmer () {
             <Baocao activeTab={activeTab} />
 
             {/* Stats Tab */}
-            <div
-              id='tab-stats'
-              className={`tab-content ${activeTab === 'stats' ? 'active' : ''}`}
-            >
-              <div className='kpi'>
-                <div className='metric'>
-                  <h5>Tổng chi phí</h5>
-                  <div className='val'>{formatNumber(userData.costTotal)}</div>
-                </div>
-                <div className='metric'>
-                  <h5>Số nhật ký</h5>
-                  <div className='val'>{userData.logs.length}</div>
-                </div>
-                <div className='metric'>
-                  <h5>Chi phí/ha</h5>
-                  <div className='val'>{formatNumber(costPerHa)}</div>
-                </div>
-              </div>
-              <div className='chart-note'>
-                (Biểu đồ chỉ minh họa, kết nối backend sẽ vẽ động)
-              </div>
-            </div>
+            <Thongkenhatky activeTab={activeTab} />
           </div>
           <footer>
             © 2025 – Nền tảng giám sát sinh trưởng chè (giao diện mẫu nông hộ)

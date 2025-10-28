@@ -12,7 +12,7 @@ const Baocao = ({ activeTab }) => {
   })
   const [anh, setAnh] = useState(null)
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target
     setIncidentForm(prev => ({ ...prev, [name]: value }))
   }
@@ -25,17 +25,17 @@ const Baocao = ({ activeTab }) => {
 
   const handleIncidentSubmit = async e => {
     e.preventDefault()
-    
+
     try {
       const formData = new FormData()
       formData.append('ngay', new Date().toISOString().split('T')[0])
-      formData.append('lo', incidentForm.plot)
+      formData.append('loid', incidentForm.plot)
       formData.append('long', incidentForm.long)
       formData.append('lat', incidentForm.lat)
       formData.append('mucdo', incidentForm.level)
       formData.append('trangthai', incidentForm.status)
       formData.append('mota', incidentForm.desc)
-      
+
       if (anh) {
         formData.append('saubenh', anh)
       }
@@ -44,12 +44,12 @@ const Baocao = ({ activeTab }) => {
         method: 'POST',
         body: formData
       })
-      
+
       if (!res.ok) throw new Error('Upload failed')
-      
+
       const data = await res.json()
       console.log('Response:', data)
-      
+
       if (data.success) {
         // Reset form sau khi thành công
         setIncidentForm({
@@ -62,10 +62,10 @@ const Baocao = ({ activeTab }) => {
           level: ''
         })
         setAnh(null)
-        
+
         const fileInput = document.querySelector('input[type="file"]')
         if (fileInput) fileInput.value = ''
-        
+
         alert('Gửi báo cáo thành công!')
       }
     } catch (err) {
@@ -85,7 +85,7 @@ const Baocao = ({ activeTab }) => {
       level: ''
     })
     setAnh(null)
-    
+
     const fileInput = document.querySelector('input[type="file"]')
     if (fileInput) fileInput.value = ''
   }
@@ -165,9 +165,9 @@ const Baocao = ({ activeTab }) => {
               onChange={handleInputChange}
             >
               <option value=''>Chọn trạng thái</option>
-              <option value='moi-phat-hien'>Mới phát hiện</option>
-              <option value='dang-xu-ly'>Đang xử lý</option>
-              <option value='da-xu-ly'>Đã xử lý</option>
+              <option value='Mới phát hiện>'>Mới phát hiện</option>
+              <option value='Đang xử lý'>Đang xử lý</option>
+              <option value='Đã xử lý'>Đã xử lý</option>
             </select>
           </div>
           <div>
@@ -178,9 +178,9 @@ const Baocao = ({ activeTab }) => {
               onChange={handleInputChange}
             >
               <option value=''>Chọn mức độ</option>
-              <option value='nhe'>Nhẹ</option>
-              <option value='trung-binh'>Trung bình</option>
-              <option value='nang'>Nặng</option>
+              <option value='Nhẹ'>Nhẹ</option>
+              <option value='Trung bình'>Trung bình</option>
+              <option value='Nặng'>Nặng</option>
             </select>
           </div>
         </div>
@@ -230,11 +230,7 @@ const Baocao = ({ activeTab }) => {
           <button className='btn' type='submit'>
             Gửi báo cáo
           </button>
-          <button
-            className='btn ghost'
-            type='button'
-            onClick={handleReset}
-          >
+          <button className='btn ghost' type='button' onClick={handleReset}>
             Xóa
           </button>
         </div>

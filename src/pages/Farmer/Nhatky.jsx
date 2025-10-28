@@ -4,7 +4,7 @@ const Nhatky = () => {
   const [logForm, setLogForm] = useState({
     date: new Date().toISOString().split('T')[0],
     type: 'tuoi',
-    cost: 0,
+    cost: null,
     plot: '',
     note: '',
     lat: '',
@@ -40,7 +40,7 @@ const Nhatky = () => {
       formData.append('noidung', logForm.note)
       formData.append('lat', logForm.lat)
       formData.append('long', logForm.long)
-      formData.append('lo', logForm.plot)
+      formData.append('loid', logForm.plot)
 
       // Chỉ thêm ảnh nếu có
       if (anh) {
@@ -72,7 +72,7 @@ const Nhatky = () => {
     setLogForm({
       date: new Date().toISOString().split('T')[0],
       type: 'tuoi',
-      cost: 0,
+      cost: null,
       plot: '',
       note: '',
       lat: '',
@@ -149,9 +149,6 @@ const Nhatky = () => {
             name='cost'
             value={logForm.cost}
             onChange={handleInputChange}
-            min='0'
-            step='1000'
-            placeholder='0'
           />
         </div>
         <div>

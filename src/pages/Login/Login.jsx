@@ -177,12 +177,7 @@ export default function Login() {
 
           {/* Footer */}
           <div className="login-footer">
-            <p>© 2025 Tea Monitor - Phiên bản demo</p>
-            <div className="login-hint">
-              <span>
-                💡 Mẹo: Chọn vai trò và bấm nút demo để tự động điền thông tin
-              </span>
-            </div>
+            <p>© 2025 Tea Monitor</p>
           </div>
         </div>
       </div>
