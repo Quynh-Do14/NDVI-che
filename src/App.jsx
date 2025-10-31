@@ -55,64 +55,66 @@ export default function App() {
   const localUser = JSON.parse(localStorage.getItem("user"))?.data;
 
   return (
-    <div className="app">
-      <main className="main-content">
-        <Routes>
-          {/* Route công khai */}
-          <Route path="/login" element={<Login />} />
+    <React.Fragment>
+      <div className="app">
+        <main className="main-content">
+          <Routes>
+            {/* Route công khai */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Route theo role */}
-          {localUser?.role === "NGUOIDUNG" && (
-            <Route path="/farmer" element={<Farmer />} />
-          )}
-          {localUser?.role === "ADMIN" && (
-            <Route path="/manager" element={<Manager />} />
-          )}
-          {localUser?.role === "NGHIENCUU" && (
-            <Route path="/researcher" element={<Researcher />} />
-          )}
+            {/* Route theo role */}
+            {localUser?.role === "NGUOIDUNG" && (
+              <Route path="/farmer" element={<Farmer />} />
+            )}
+            {localUser?.role === "ADMIN" && (
+              <Route path="/manager" element={<Manager />} />
+            )}
+            {localUser?.role === "NGHIENCUU" && (
+              <Route path="/researcher" element={<Researcher />} />
+            )}
 
-          {/* Redirect mặc định */}
-          <Route
-            path="/"
-            element={
-              localUser ? (
-                localUser.role === "NGUOIDUNG" ? (
-                  <Navigate to="/farmer" />
-                ) : localUser.role === "ADMIN" ? (
-                  <Navigate to="/researcher" />
-                ) : localUser.role === "QUANLY" ? (
-                  <Navigate to="/manager" />
+            {/* Redirect mặc định */}
+            <Route
+              path="/"
+              element={
+                localUser ? (
+                  localUser.role === "NGUOIDUNG" ? (
+                    <Navigate to="/farmer" />
+                  ) : localUser.role === "ADMIN" ? (
+                    <Navigate to="/researcher" />
+                  ) : localUser.role === "QUANLY" ? (
+                    <Navigate to="/manager" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
                 ) : (
                   <Navigate to="/login" />
                 )
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+              }
+            />
 
-          {/* Redirect cho các route không tồn tại */}
-          <Route
-            path="*"
-            element={
-              localUser ? (
-                localUser.role === "NGUOIDUNG" ? (
-                  <Navigate to="/farmer" />
-                ) : localUser.role === "ADMIN" ? (
-                  <Navigate to="/researcher" />
-                ) : localUser.role === "QUANLY" ? (
-                  <Navigate to="/manager" />
+            {/* Redirect cho các route không tồn tại */}
+            <Route
+              path="*"
+              element={
+                localUser ? (
+                  localUser.role === "NGUOIDUNG" ? (
+                    <Navigate to="/farmer" />
+                  ) : localUser.role === "ADMIN" ? (
+                    <Navigate to="/researcher" />
+                  ) : localUser.role === "QUANLY" ? (
+                    <Navigate to="/manager" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
                 ) : (
                   <Navigate to="/login" />
                 )
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-        </Routes>
-      </main>
-    </div>
+              }
+            />
+          </Routes>
+        </main>
+      </div>
+    </React.Fragment>
   );
 }

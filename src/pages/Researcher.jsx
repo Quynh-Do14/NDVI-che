@@ -638,7 +638,7 @@ export default function Researcher() {
             </div>
             <div className="hint">
               Truy cập dữ liệu ẩn danh, tải thống kê chỉ số GEE theo lô/vùng,
-              xuất CSV/GeoJSON (demo, không gọi endpoint thật).
+              xuất CSV/GeoJSON
             </div>
           </div>
         </div>
@@ -773,7 +773,7 @@ export default function Researcher() {
             <button
               className="btn ghost"
               onClick={copyAPI}
-              title="Sao chép URL API chỉ‑đọc (demo)"
+              title="Sao chép URL API"
             >
               Copy API (read‑only)
             </button>
