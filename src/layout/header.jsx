@@ -7,14 +7,14 @@ const HeaderComponent = () => {
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('user')
+    const userData = sessionStorage.getItem('user')
     if (userData) {
       setUser(JSON.parse(userData))
     }
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
+    sessionStorage.removeItem('user')
     setUser(null)
     window.location.href = '/login'
   }
@@ -26,7 +26,7 @@ const HeaderComponent = () => {
         <Link
           to='/login'
           onClick={() => {
-            localStorage.clear()
+            sessionStorage.clear()
             handleLogout()
           }}
           style={{ textDecoration: 'none', color: 'inherit' }}

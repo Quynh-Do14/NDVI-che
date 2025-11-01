@@ -68,7 +68,7 @@ export default function Login() {
 
       if (data.success) {
         // Lưu thông tin user vào localStorage
-        localStorage.setItem("user", JSON.stringify(data));
+        sessionStorage.setItem("user", JSON.stringify(data));
 
         // Lấy role từ response
         const userRole = data.data?.role;
