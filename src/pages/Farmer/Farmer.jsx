@@ -485,7 +485,7 @@ export default function Farmer () {
             arrow
           >
             <span className='pill'>
-              {JSON.parse(localStorage.getItem('user'))?.data?.ten}
+              {JSON.parse(sessionStorage.getItem('user'))?.data?.ten}
             </span>
           </Dropdown>
         </div>

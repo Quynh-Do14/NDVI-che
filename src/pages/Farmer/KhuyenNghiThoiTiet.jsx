@@ -52,9 +52,9 @@ const KhuyenNghiThoiTiet = ({ activeTab }) => {
   }
 
   const onGetDataRecommend = async () => {
-    const user = localStorage.getItem('user')
+    const user = sessionStorage.getItem('user')
     var us = JSON.parse(user)
-    fetch('http://103.163.119.247:33612/khuyencao?userid=' + us.data.iduser)
+    fetch('http://103.163.119.247:33612/khuyencao?userid=' + us?.data?.iduser)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok')

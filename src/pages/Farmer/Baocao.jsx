@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 const Baocao = ({ activeTab }) => {
   const [incidentForm, setIncidentForm] = useState({
@@ -11,6 +11,7 @@ const Baocao = ({ activeTab }) => {
     level: ''
   })
   const [anh, setAnh] = useState(null)
+  const [dsLoChe, setDsLoChe] = useState([])
 
   const handleInputChange = e => {
     const { name, value } = e.target
@@ -90,32 +91,26 @@ const Baocao = ({ activeTab }) => {
     if (fileInput) fileInput.value = ''
   }
 
-  const plots = [
-    {
-      id: 1,
-      name: 'PO1 - Lô PO1'
-    },
-    {
-      id: 2,
-      name: 'PO2 - Lô PO2'
-    },
-    {
-      id: 3,
-      name: 'PO3 - Lô PO3'
-    },
-    {
-      id: 4,
-      name: 'PO4 - Lô PO4'
-    },
-    {
-      id: 5,
-      name: 'PO5 - Lô PO5'
-    },
-    {
-      id: 6,
-      name: 'PO6 - Lô PO6'
-    }
-  ]
+  const fetchDataDSLoChe = async () => {
+    fetch('http://103.163.119.247:33612/lo')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok')
+        }
+        return response.json() // Chuyển đổi dữ liệu trả về thành JSON
+      })
+      .then(data => {
+        if (data.success) {
+          setDsLoChe(data.data)
+        }
+      })
+      .catch(error => {
+        console.log('error', error)
+      })
+  }
+  useEffect(() => {
+    fetchDataDSLoChe()
+  }, [])
 
   return (
     <div
@@ -147,9 +142,9 @@ const Baocao = ({ activeTab }) => {
               onChange={handleInputChange}
             >
               <option value=''>Chọn lô</option>
-              {plots.map(plot => (
-                <option key={plot.id} value={plot.id}>
-                  {plot.id} – {plot.name}
+              {dsLoChe.map(plot => (
+                <option key={plot.idlo} value={plot.idlo}>
+                  {plot.tenlo}
                 </option>
               ))}
             </select>

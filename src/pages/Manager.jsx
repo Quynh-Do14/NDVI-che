@@ -155,7 +155,7 @@ const Manager = () => {
   const [tenVung, setTenVung] = useState('')
   const [dienTich, setDienTich] = useState('')
   const [trangThai, setTrangThai] = useState('Đang canh tác')
-  const [vungid, setVungId] = useState('V001')
+  const [vungid, setVungId] = useState('')
   const [loCheId, setLoCheId] = useState('')
   const [trangthaitrong, setTrangThaiTrong] = useState('Đang trồng')
   const [nam, setNam] = useState('')
@@ -780,6 +780,7 @@ const Manager = () => {
         nam: nam,
         trangthaitrong: trangthaitrong,
         userid: user,
+        vungid: vungid,
         vungid: 1,
         geom: JSON.stringify(polygonDraw.geometry)
       })
@@ -1024,13 +1025,13 @@ const Manager = () => {
       })
   }
 
-    const fetchDataDSKhuyenCao = async () => {
+  const fetchDataDSKhuyenCao = async () => {
     try {
       const user = sessionStorage.getItem('user')
       var us = JSON.parse(user)
       console.log('us.data.iduser', us.data.iduser)
 
-      fetch('http://103.163.119.247:33612/khuyencao?userid=' + us.data.iduser)
+      fetch('http://103.163.119.247:33612/khuyencaoquantri')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok')
@@ -1047,7 +1048,6 @@ const Manager = () => {
         })
     } catch (error) {}
   }
-
 
   useEffect(() => {
     onGetWeather()
@@ -1654,21 +1654,21 @@ const Manager = () => {
                       </Select>
                     </Form.Item>
 
-                    {/* <Form.Item label='Lô chè' required>
+                    <Form.Item label='Thuộc vùng' required>
                       <Select
-                        placeholder='Chọn lô'
-                        value={loCheId}
-                        onChange={val => setLoCheId(val)}
+                        placeholder='Chọn vùng'
+                        value={vungid}
+                        onChange={val => setVungId(val)}
                         showSearch
                         optionFilterProp='children'
                       >
-                        {dsLoChe.map((v, i) => (
-                          <Option key={i} value={v.idlo}>
-                            {v.tenlo}
+                        {dsVung.map((v, i) => (
+                          <Option key={i} value={v.idvung}>
+                            {v.tenvung}
                           </Option>
                         ))}
                       </Select>
-                    </Form.Item> */}
+                    </Form.Item>
 
                     <Form.Item label='Năm trồng'>
                       <Input
@@ -1891,26 +1891,34 @@ const Manager = () => {
                   <div className='card-header'>
                     <h3>Khuyến cáo vùng (AOI)</h3>
                   </div>
-                  <div className='aoi-items'>
-                    {aoiItems.map(aoi => (
-                      <div key={aoi.id} className='aoi-item'>
-                        <div className='aoi-info'>
-                          <div className='aoi-title'>{aoi.id}</div>
-                          <div className='aoi-meta'>
-                            {aoi.date} • <Tag color='green'>{aoi.status}</Tag>
-                          </div>
-                          <div className='aoi-coords'>
-                            Mẫu tọa độ: {aoi.coords}
-                          </div>
-                        </div>
-                        <Button size='small' icon={<EnvironmentOutlined />}>
-                          Xem trên bản đồ
-                        </Button>
-                      </div>
-                    ))}
-                    {aoiItems.length === 0 && (
-                      <div className='empty-aoi'>Chưa có khuyến cáo nào</div>
-                    )}
+                  <div className='table-container'>
+                    <table className='aoi-table'>
+                      <thead>
+                        <tr>
+                          <th>Nội dung</th>
+                          <th>Lịch</th>
+                          <th>Thời gian</th>
+                          <th>Tên vùng</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {aoiItems.map(aoi => (
+                          <tr key={aoi.id} className='aoi-row'>
+                            <td className='aoi-content'>{aoi.noidung}</td>
+                            <td className='aoi-schedule'>{aoi.lich}</td>
+                            <td className='aoi-schedule'>{aoi.time}</td>
+                            <td className='aoi-region'>{aoi.tenvung}</td>
+                          </tr>
+                        ))}
+                        {aoiItems.length === 0 && (
+                          <tr>
+                            <td colSpan='4' className='empty-message'>
+                              Chưa có khuyến cáo nào
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </Card>
               </div>
