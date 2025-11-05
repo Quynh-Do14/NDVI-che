@@ -1,148 +1,155 @@
-import React, { useEffect, useState } from 'react'
+import { message } from "antd";
+import React, { useEffect, useState } from "react";
 
 const Baocao = ({ activeTab }) => {
   const [incidentForm, setIncidentForm] = useState({
-    type: 'sau-benh',
-    plot: '',
-    desc: '',
-    lat: '',
-    long: '',
-    status: '',
-    level: ''
-  })
-  const [anh, setAnh] = useState(null)
-  const [dsLoChe, setDsLoChe] = useState([])
+    type: "sau-benh",
+    plot: "",
+    desc: "",
+    lat: "",
+    long: "",
+    status: "",
+    level: "",
+  });
+  const [anh, setAnh] = useState(null);
+  const [dsLoChe, setDsLoChe] = useState([]);
 
-  const handleInputChange = e => {
-    const { name, value } = e.target
-    setIncidentForm(prev => ({ ...prev, [name]: value }))
-  }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setIncidentForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleFileChange = e => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setAnh(e.target.files[0])
+      setAnh(e.target.files[0]);
     }
-  }
-
-  const handleIncidentSubmit = async e => {
-    e.preventDefault()
+  };
+  useEffect(() => {
+    if (dsLoChe.length) {
+      setIncidentForm({
+        plot: dsLoChe[0].idlo,
+      });
+    }
+  }, [dsLoChe]);
+  const handleIncidentSubmit = async (e) => {
+    e.preventDefault();
 
     try {
-      const formData = new FormData()
-      formData.append('ngay', new Date().toISOString().split('T')[0])
-      formData.append('loid', incidentForm.plot)
-      formData.append('long', incidentForm.long)
-      formData.append('lat', incidentForm.lat)
-      formData.append('mucdo', incidentForm.level)
-      formData.append('trangthai', incidentForm.status)
-      formData.append('mota', incidentForm.desc)
+      const formData = new FormData();
+      formData.append("ngay", new Date().toISOString().split("T")[0]);
+      formData.append("loid", incidentForm.plot);
+      formData.append("long", incidentForm.long);
+      formData.append("lat", incidentForm.lat);
+      formData.append("mucdo", incidentForm.level);
+      formData.append("trangthai", incidentForm.status);
+      formData.append("mota", incidentForm.desc);
 
       if (anh) {
-        formData.append('saubenh', anh)
+        formData.append("saubenh", anh);
       }
 
-      const res = await fetch('http://103.163.119.247:33612/saubenh', {
-        method: 'POST',
-        body: formData
-      })
+      const res = await fetch("http://103.163.119.247:33612/saubenh", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (!res.ok) throw new Error('Upload failed')
+      if (!res.ok) throw new Error("Upload failed");
 
-      const data = await res.json()
-      console.log('Response:', data)
+      const data = await res.json();
+      console.log("Response:", data);
 
       if (data.success) {
         // Reset form sau khi thành công
         setIncidentForm({
-          type: 'sau-benh',
-          plot: '',
-          desc: '',
-          lat: '',
-          long: '',
-          status: '',
-          level: ''
-        })
-        setAnh(null)
+          type: "sau-benh",
+          plot: "",
+          desc: "",
+          lat: "",
+          long: "",
+          status: "",
+          level: "",
+        });
+        setAnh(null);
 
-        const fileInput = document.querySelector('input[type="file"]')
-        if (fileInput) fileInput.value = ''
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = "";
 
-        alert('Gửi báo cáo thành công!')
+        message.success("Gửi báo cáo thành công!");
       }
     } catch (err) {
-      console.error('Error:', err)
-      alert('Lỗi khi gửi báo cáo!')
+      console.error("Error:", err);
+      message.error("Lỗi khi gửi báo cáo!");
     }
-  }
+  };
 
   const handleReset = () => {
     setIncidentForm({
-      type: 'sau-benh',
-      plot: '',
-      desc: '',
-      lat: '',
-      long: '',
-      status: '',
-      level: ''
-    })
-    setAnh(null)
+      type: "sau-benh",
+      plot: "",
+      desc: "",
+      lat: "",
+      long: "",
+      status: "",
+      level: "",
+    });
+    setAnh(null);
 
-    const fileInput = document.querySelector('input[type="file"]')
-    if (fileInput) fileInput.value = ''
-  }
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = "";
+  };
 
   const fetchDataDSLoChe = async () => {
-    fetch('http://103.163.119.247:33612/lo')
-      .then(response => {
+    fetch("http://103.163.119.247:33612/lo")
+      .then((response) => {
         if (!response.ok) {
-          throw new Error('Network response was not ok')
+          throw new Error("Network response was not ok");
         }
-        return response.json() // Chuyển đổi dữ liệu trả về thành JSON
+        return response.json(); // Chuyển đổi dữ liệu trả về thành JSON
       })
-      .then(data => {
+      .then((data) => {
         if (data.success) {
-          setDsLoChe(data.data)
+          setDsLoChe(data.data);
         }
       })
-      .catch(error => {
-        console.log('error', error)
-      })
-  }
+      .catch((error) => {
+        console.log("error", error);
+      });
+  };
   useEffect(() => {
-    fetchDataDSLoChe()
-  }, [])
+    fetchDataDSLoChe();
+  }, []);
 
   return (
     <div
-      id='tab-report'
-      className={`tab-content ${activeTab === 'report' ? 'active' : ''}`}
+      id="tab-report"
+      className={`tab-content ${activeTab === "report" ? "active" : ""}`}
     >
-      <form id='form-incident' onSubmit={handleIncidentSubmit}>
-        <div className='row'>
+      <form id="form-incident" onSubmit={handleIncidentSubmit}>
+        <div className="row">
           <div>
             <label>Loại sự cố</label>
             <select
-              name='type'
+              name="type"
               value={incidentForm.type}
               onChange={handleInputChange}
               required
             >
-              <option value='sau-benh'>Sâu bệnh</option>
-              <option value='ung'>Úng</option>
-              <option value='han'>Hạn</option>
-              <option value='suong-muoi'>Sương muối</option>
-              <option value='khac'>Khác</option>
+              <option value="sau-benh">Sâu bệnh</option>
+              <option value="ung">Úng</option>
+              <option value="han">Hạn</option>
+              <option value="suong-muoi">Sương muối</option>
+              <option value="khac">Khác</option>
             </select>
           </div>
           <div>
             <label>Lô chè</label>
             <select
-              name='plot'
+              name="plot"
               value={incidentForm.plot}
               onChange={handleInputChange}
             >
-              <option value=''>Chọn lô</option>
-              {dsLoChe.map(plot => (
+              <option value="">Chọn lô</option>
+              {dsLoChe.map((plot) => (
                 <option key={plot.idlo} value={plot.idlo}>
                   {plot.tenlo}
                 </option>
@@ -151,87 +158,87 @@ const Baocao = ({ activeTab }) => {
           </div>
         </div>
 
-        <div className='row'>
+        <div className="row">
           <div>
             <label>Trạng thái</label>
             <select
-              name='status'
+              name="status"
               value={incidentForm.status}
               onChange={handleInputChange}
             >
-              <option value=''>Chọn trạng thái</option>
-              <option value='Mới phát hiện>'>Mới phát hiện</option>
-              <option value='Đang xử lý'>Đang xử lý</option>
-              <option value='Đã xử lý'>Đã xử lý</option>
+              <option value="">Chọn trạng thái</option>
+              <option value="Mới phát hiện>">Mới phát hiện</option>
+              <option value="Đang xử lý">Đang xử lý</option>
+              <option value="Đã xử lý">Đã xử lý</option>
             </select>
           </div>
           <div>
             <label>Mức độ</label>
             <select
-              name='level'
+              name="level"
               value={incidentForm.level}
               onChange={handleInputChange}
             >
-              <option value=''>Chọn mức độ</option>
-              <option value='Nhẹ'>Nhẹ</option>
-              <option value='Trung bình'>Trung bình</option>
-              <option value='Nặng'>Nặng</option>
+              <option value="">Chọn mức độ</option>
+              <option value="Nhẹ">Nhẹ</option>
+              <option value="Trung bình">Trung bình</option>
+              <option value="Nặng">Nặng</option>
             </select>
           </div>
         </div>
 
         <label>Mô tả</label>
         <textarea
-          name='desc'
+          name="desc"
           value={incidentForm.desc}
           onChange={handleInputChange}
-          placeholder='Triệu chứng, mức độ...'
+          placeholder="Triệu chứng, mức độ..."
           rows={3}
         />
 
-        <div className='row'>
+        <div className="row">
           <div>
             <label>Vĩ độ</label>
             <input
-              type='text'
-              name='lat'
+              type="text"
+              name="lat"
               value={incidentForm.lat}
-              placeholder='Nhập vĩ độ'
+              placeholder="Nhập vĩ độ"
               onChange={handleInputChange}
             />
           </div>
           <div>
             <label>Kinh độ</label>
             <input
-              type='text'
-              name='long'
+              type="text"
+              name="long"
               value={incidentForm.long}
-              placeholder='Nhập kinh độ'
+              placeholder="Nhập kinh độ"
               onChange={handleInputChange}
             />
           </div>
           <div>
             <label>Ảnh hiện trường</label>
-            <input type='file' accept='image/*' onChange={handleFileChange} />
+            <input type="file" accept="image/*" onChange={handleFileChange} />
             {anh && (
-              <span style={{ fontSize: '12px', color: '#666' }}>
+              <span style={{ fontSize: "12px", color: "#666" }}>
                 Đã chọn: {anh.name}
               </span>
             )}
           </div>
         </div>
 
-        <div className='form-actions'>
-          <button className='btn' type='submit'>
+        <div className="form-actions">
+          <button className="btn" type="submit">
             Gửi báo cáo
           </button>
-          <button className='btn ghost' type='button' onClick={handleReset}>
+          <button className="btn ghost" type="button" onClick={handleReset}>
             Xóa
           </button>
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default Baocao
+export default Baocao;

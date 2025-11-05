@@ -1,120 +1,127 @@
-import React, { useEffect, useState } from 'react'
+import { message } from "antd";
+import React, { useEffect, useState } from "react";
 
 const Nhatky = () => {
   const [logForm, setLogForm] = useState({
-    date: new Date().toISOString().split('T')[0],
-    type: 'tuoi',
+    date: new Date().toISOString().split("T")[0],
+    type: "tuoi",
     cost: null,
-    plot: '',
-    note: '',
-    lat: '',
-    long: ''
-  })
-  const [anh, setAnh] = useState(null)
-  const [dsLoChe, setDsLoChe] = useState([])
+    plot: "",
+    note: "",
+    lat: "",
+    long: "",
+  });
+  const [anh, setAnh] = useState(null);
+  const [dsLoChe, setDsLoChe] = useState([]);
 
   // Sửa hàm handleInputChange - bỏ currying
-  const handleInputChange = e => {
-    const { name, value } = e.target
-    setLogForm(prev => ({
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setLogForm((prev) => ({
       ...prev,
-      [name]: name === 'cost' ? Number(value) : value
-    }))
-  }
+      [name]: name === "cost" ? Number(value) : value,
+    }));
+  };
 
-  const handleFileChange = e => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setAnh(e.target.files[0])
+      setAnh(e.target.files[0]);
     }
-  }
-
-  const handleLogSubmit = async e => {
-    e.preventDefault()
+  };
+  useEffect(() => {
+    if (dsLoChe.length) {
+      setLogForm({
+        plot: dsLoChe[0].idlo,
+      });
+    }
+  }, [dsLoChe]);
+  const handleLogSubmit = async (e) => {
+    e.preventDefault();
 
     try {
-      const formData = new FormData()
+      const formData = new FormData();
 
       // Thêm các trường dữ liệu vào formData
-      formData.append('date', logForm.date)
-      formData.append('hanhdong', logForm.type)
-      formData.append('chiphi', logForm.cost.toString())
-      formData.append('noidung', logForm.note)
-      formData.append('lat', logForm.lat)
-      formData.append('long', logForm.long)
-      formData.append('loid', logForm.plot)
+      formData.append("date", logForm.date);
+      formData.append("hanhdong", logForm.type);
+      formData.append("chiphi", logForm.cost.toString());
+      formData.append("noidung", logForm.note);
+      formData.append("lat", logForm.lat);
+      formData.append("long", logForm.long);
+      formData.append("loid", logForm.plot);
 
       // Chỉ thêm ảnh nếu có
       if (anh) {
-        formData.append('nhatky', anh)
+        formData.append("nhatky", anh);
       }
 
-      const res = await fetch('http://103.163.119.247:33612/nhatky', {
-        method: 'POST',
-        body: formData
-      })
+      const res = await fetch("http://103.163.119.247:33612/nhatky", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
 
-      const data = await res.json()
-      console.log('Response:', data)
+      const data = await res.json();
+      console.log("Response:", data);
 
       if (data.success) {
         // Reset form sau khi thành công
-        handleReset()
-        alert('Lưu nhật ký thành công!')
+        handleReset();
+        message.success("Lưu nhật ký thành công!");
       }
     } catch (err) {
-      console.error('Error:', err)
-      alert('Lỗi khi lưu nhật ký!')
+      console.error("Error:", err);
+      message.error("Lỗi khi lưu nhật ký!");
     }
-  }
+  };
 
   const handleReset = () => {
     setLogForm({
-      date: new Date().toISOString().split('T')[0],
-      type: 'tuoi',
+      date: new Date().toISOString().split("T")[0],
+      type: "tuoi",
       cost: null,
-      plot: '',
-      note: '',
-      lat: '',
-      long: ''
-    })
-    setAnh(null)
+      plot: "",
+      note: "",
+      lat: "",
+      long: "",
+    });
+    setAnh(null);
 
     // Reset file input
-    const fileInput = document.querySelector('input[type="file"]')
-    if (fileInput) fileInput.value = ''
-  }
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = "";
+  };
 
   const fetchDataDSLoChe = async () => {
-    fetch('http://103.163.119.247:33612/lo')
-      .then(response => {
+    fetch("http://103.163.119.247:33612/lo")
+      .then((response) => {
         if (!response.ok) {
-          throw new Error('Network response was not ok')
+          throw new Error("Network response was not ok");
         }
-        return response.json() // Chuyển đổi dữ liệu trả về thành JSON
+        return response.json(); // Chuyển đổi dữ liệu trả về thành JSON
       })
-      .then(data => {
+      .then((data) => {
         if (data.success) {
-          setDsLoChe(data.data)
+          setDsLoChe(data.data);
         }
       })
-      .catch(error => {
-        console.log('error', error)
-      })
-  }
+      .catch((error) => {
+        console.log("error", error);
+      });
+  };
   useEffect(() => {
-    fetchDataDSLoChe()
-  }, [])
+    fetchDataDSLoChe();
+  }, []);
 
   return (
-    <form id='form-log' onSubmit={handleLogSubmit}>
-      <div className='row'>
+    <form id="form-log" onSubmit={handleLogSubmit}>
+      <div className="row">
         <div>
           <label>Ngày thực hiện</label>
           <input
-            type='date'
-            name='date'
+            type="date"
+            name="date"
             value={logForm.date}
             onChange={handleInputChange}
             required
@@ -123,34 +130,34 @@ const Nhatky = () => {
         <div>
           <label>Loại công việc</label>
           <select
-            name='type'
+            name="type"
             value={logForm.type}
             onChange={handleInputChange}
             required
           >
-            <option value='tuoi'>Tưới</option>
-            <option value='bon'>Bón phân</option>
-            <option value='phun'>Phun thuốc</option>
-            <option value='thu-hai'>Thu hái</option>
+            <option value="tuoi">Tưới</option>
+            <option value="bon">Bón phân</option>
+            <option value="phun">Phun thuốc</option>
+            <option value="thu-hai">Thu hái</option>
           </select>
         </div>
       </div>
 
-      <div className='row'>
+      <div className="row">
         <div>
           <label>Chi phí (VNĐ)</label>
           <input
-            type='number'
-            name='cost'
+            type="number"
+            name="cost"
             value={logForm.cost}
             onChange={handleInputChange}
           />
         </div>
         <div>
           <label>Lô chè</label>
-          <select name='plot' value={logForm.plot} onChange={handleInputChange}>
-            <option value=''>Chọn lô</option>
-            {dsLoChe.map(plot => (
+          <select name="plot" value={logForm.plot} onChange={handleInputChange}>
+            <option value="">Chọn lô</option>
+            {dsLoChe.map((plot) => (
               <option key={plot.idlo} value={plot.idlo}>
                 {plot.tenlo}
               </option>
@@ -161,56 +168,56 @@ const Nhatky = () => {
 
       <label>Ghi chú</label>
       <textarea
-        name='note'
+        name="note"
         value={logForm.note}
         onChange={handleInputChange}
-        placeholder='Mô tả chi tiết công việc...'
-        id='log-note'
+        placeholder="Mô tả chi tiết công việc..."
+        id="log-note"
         rows={3}
       />
 
-      <div className='row'>
+      <div className="row">
         <div>
           <label>Vĩ độ</label>
           <input
-            type='text'
-            name='lat'
+            type="text"
+            name="lat"
             value={logForm.lat}
-            placeholder='Nhập vĩ độ'
+            placeholder="Nhập vĩ độ"
             onChange={handleInputChange}
           />
         </div>
         <div>
           <label>Kinh độ</label>
           <input
-            type='text'
-            name='long'
+            type="text"
+            name="long"
             value={logForm.long}
-            placeholder='Nhập kinh độ'
+            placeholder="Nhập kinh độ"
             onChange={handleInputChange}
           />
         </div>
         <div>
           <label>Ảnh hiện trường</label>
-          <input type='file' accept='image/*' onChange={handleFileChange} />
+          <input type="file" accept="image/*" onChange={handleFileChange} />
           {anh && (
-            <span style={{ fontSize: '12px', color: '#666' }}>
+            <span style={{ fontSize: "12px", color: "#666" }}>
               Đã chọn: {anh.name}
             </span>
           )}
         </div>
       </div>
 
-      <div className='form-actions'>
-        <button className='btn' type='submit'>
+      <div className="form-actions">
+        <button className="btn" type="submit">
           Lưu nhật ký
         </button>
-        <button className='btn ghost' type='button' onClick={handleReset}>
+        <button className="btn ghost" type="button" onClick={handleReset}>
           Xóa
         </button>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default Nhatky
+export default Nhatky;
