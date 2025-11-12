@@ -150,9 +150,9 @@ const Manager = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [aoiItems, setAoiItems] = useState([]);
   const [layerVisibility, setLayerVisibility] = useState({
-    "tea-regions": true,
-    "tea-plots": true,
-    "risk-heat": true,
+    vung: true,
+    lo: true,
+    diem: true,
     events: true,
   });
   const [modalKhuyenCao, setModalKhuyenCao] = useState(false);
@@ -366,7 +366,7 @@ const Manager = () => {
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/outdoors-v12",
+      style: "mapbox://styles/mapbox/satellite-v9",
       center: center,
       zoom: 8.5,
     });
@@ -928,13 +928,27 @@ const Manager = () => {
 
   const handleLayerToggle = (layer, checked) => {
     setLayerVisibility((prev) => ({ ...prev, [layer]: checked }));
-    if (mapRef.current?.getLayer(layer)) {
-      mapRef.current.setLayoutProperty(
-        layer,
-        "visibility",
-        checked ? "visible" : "none"
-      );
-    }
+
+    if (!mapRef.current) return;
+
+    // Bật/tắt tất cả layer con tương ứng (fill, outline, label, extrude...)
+    const layerGroups = {
+      vung: ["vung-fill", "vung-outline", "vung-label", "vung-extrude"],
+      lo: ["lo-fill", "lo-outline", "lo-label"],
+      diem: ["diem-point", "diem-label"],
+    };
+
+    const targetLayers = layerGroups[layer] || [layer];
+
+    targetLayers.forEach((id) => {
+      if (mapRef.current.getLayer(id)) {
+        mapRef.current.setLayoutProperty(
+          id,
+          "visibility",
+          checked ? "visible" : "none"
+        );
+      }
+    });
   };
 
   // Calculate averages
@@ -1457,37 +1471,25 @@ const Manager = () => {
                 <div ref={mapContainer} className="map-container" />
                 <div className="layer-controls">
                   <Checkbox
-                    checked={layerVisibility["tea-regions"]}
+                    checked={layerVisibility["vung"]}
                     onChange={(e) =>
-                      handleLayerToggle("tea-regions", e.target.checked)
+                      handleLayerToggle("vung", e.target.checked)
                     }
                   >
                     Vùng chè
                   </Checkbox>
                   <Checkbox
-                    checked={layerVisibility["tea-plots"]}
-                    onChange={(e) =>
-                      handleLayerToggle("tea-plots", e.target.checked)
-                    }
+                    checked={layerVisibility["lo"]}
+                    onChange={(e) => handleLayerToggle("lo", e.target.checked)}
                   >
-                    Lô chè
+                    Điểm khoan trắc
                   </Checkbox>
                   <Checkbox
-                    checked={layerVisibility["risk-heat"]}
+                    checked={layerVisibility["diem"]}
                     onChange={(e) =>
-                      handleLayerToggle("risk-heat", e.target.checked)
+                      handleLayerToggle("diem", e.target.checked)
                     }
-                  >
-                    Rủi ro
-                  </Checkbox>
-                  <Checkbox
-                    checked={layerVisibility["events"]}
-                    onChange={(e) =>
-                      handleLayerToggle("events", e.target.checked)
-                    }
-                  >
-                    Sự kiện
-                  </Checkbox>
+                  ></Checkbox>
                 </div>
                 <Modal
                   title="Tạo khuyến cáo vùng (AOI)"
