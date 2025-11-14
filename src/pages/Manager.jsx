@@ -518,47 +518,47 @@ const Manager = () => {
         type: 'fill',
         source: 'lo',
         paint: {
-          "fill-color": [
-            "match",
-            ["get", "giong"],
-            "Chè Tân Cương",
-            "#A7F3D0",
-            "Trà Shan Tuyết Cổ Thụ",
-            "#FBCFE8",
-            "Trà Mộc Châu",
-            "#FDE68A",
-            "Trà Cầu Đất",
-            "#BFDBFE",
-            "Trà Ô Long Lâm Đồng",
-            "#DDD6FE",
-            "Giống chè TRI777",
-            "#FECACA",
-            "Giống chè PH1",
-            "#FCD34D",
-            "Giống chè LDP1",
-            "#F9A8D4",
-            "Giống chè Shan",
-            "#6EE7B7",
-            "Giống chè Ô Long",
-            "#C7D2FE",
-            "Trà Xanh",
-            "#86EFAC",
-            "Trà Đen",
-            "#A3A3A3",
-            "Trà Ô Long chế biến",
-            "#FBCFE8",
-            "Trà Trắng",
-            "#FAFAF5",
-            "Trà Phổ Nhĩ",
-            "#D6D3D1",
-            "Trà ướp hương",
-            "#FFE4E6",
+          'fill-color': [
+            'match',
+            ['get', 'giong'],
+            'Chè Tân Cương',
+            '#A7F3D0',
+            'Trà Shan Tuyết Cổ Thụ',
+            '#FBCFE8',
+            'Trà Mộc Châu',
+            '#FDE68A',
+            'Trà Cầu Đất',
+            '#BFDBFE',
+            'Trà Ô Long Lâm Đồng',
+            '#DDD6FE',
+            'Giống chè TRI777',
+            '#FECACA',
+            'Giống chè PH1',
+            '#FCD34D',
+            'Giống chè LDP1',
+            '#F9A8D4',
+            'Giống chè Shan',
+            '#6EE7B7',
+            'Giống chè Ô Long',
+            '#C7D2FE',
+            'Trà Xanh',
+            '#86EFAC',
+            'Trà Đen',
+            '#A3A3A3',
+            'Trà Ô Long chế biến',
+            '#FBCFE8',
+            'Trà Trắng',
+            '#FAFAF5',
+            'Trà Phổ Nhĩ',
+            '#D6D3D1',
+            'Trà ướp hương',
+            '#FFE4E6',
 
-            /* other */ "#E5E7EB",
+            /* other */ '#E5E7EB'
           ],
-          "fill-opacity": 0.9,
-        },
-      });
+          'fill-opacity': 0.9
+        }
+      })
       // Viền lô (mảnh và hơi tối để nhìn ranh rõ khi zoom gần)
       map.addLayer({
         id: 'lo-outline',
@@ -1715,6 +1715,9 @@ const Manager = () => {
                 <a href='#logsPanel'>Nhật ký nông hộ</a>
                 <a href='#aoiPanel'>Khuyến cáo (AOI)</a>
                 <a href='#reportPanel'>Báo cáo sâu bệnh</a>
+                <a href='#nonghoPanel'>Quản trị nông hộ</a>
+                <a href='#vungPanel'>Quản trị vùng</a>
+                <a href='#loPanel'>Quản trị lô</a>
               </nav>
             </Card>
           </aside>
@@ -1749,13 +1752,13 @@ const Manager = () => {
                 <h3 className='card-value text-blue-700'>{rainTotal}</h3>
                 <p className='card-desc'>mm</p>
               </Card>
-              <Card className="info-card">
-                <a target="_blank" href="https://thangnn.shinyapps.io/vietao/">
-                  <p className="card-label">Năng suất dự báo</p>
-                  <h3 className="card-value text-amber-700">
+              <Card className='info-card'>
+                <a target='_blank' href='https://thangnn.shinyapps.io/vietao/'>
+                  <p className='card-label'>Năng suất dự báo</p>
+                  <h3 className='card-value text-amber-700'>
                     {fmt.format(data.yieldAvg)}
                   </h3>
-                  <p className="card-desc">tấn/ha</p>
+                  <p className='card-desc'>tấn/ha</p>
                 </a>
               </Card>
             </section>
@@ -1796,10 +1799,12 @@ const Manager = () => {
                   >
                     Gửi FCM
                   </Button> */}
+
                     <Tooltip
                       title={
-                        !polygonDraw.geometry.coordinates.length
-                          ? 'Vui lòng chọn điểm trên bản đồ'
+                        !polygonDraw.geometry.coordinates.length ||
+                        polygonDraw.geometry.type !== 'Polygon'
+                          ? 'Vui lòng vẽ vùng để tiếp tục'
                           : ''
                       }
                     >
@@ -1808,15 +1813,19 @@ const Manager = () => {
                         icon={<RadiusSettingOutlined />}
                         onClick={toggleThemVung}
                         className={isDrawing ? 'active-draw' : ''}
-                        disabled={!polygonDraw.geometry.coordinates.length}
+                        disabled={
+                          !polygonDraw.geometry.coordinates.length ||
+                          polygonDraw.geometry.type !== 'Polygon'
+                        }
                       >
                         Thêm vùng
                       </Button>
                     </Tooltip>
                     <Tooltip
                       title={
-                        !polygonDraw.geometry.coordinates.length
-                          ? 'Vui lòng chọn điểm trên bản đồ'
+                        !polygonDraw.geometry.coordinates.length ||
+                        polygonDraw.geometry.type !== 'Polygon'
+                          ? 'Vui lòng vẽ vùng để tiếp tục'
                           : ''
                       }
                     >
@@ -1825,15 +1834,19 @@ const Manager = () => {
                         icon={<BlockOutlined />}
                         onClick={toggleThemLo}
                         className={isDrawing ? 'active-draw' : ''}
-                        disabled={!polygonDraw.geometry.coordinates.length}
+                        disabled={
+                          !polygonDraw.geometry.coordinates.length ||
+                          polygonDraw.geometry.type !== 'Polygon'
+                        }
                       >
                         Thêm lô
                       </Button>
                     </Tooltip>
                     <Tooltip
                       title={
-                        !polygonDraw.geometry.coordinates.length
-                          ? 'Vui lòng chọn điểm trên bản đồ'
+                        !polygonDraw.geometry.coordinates.length ||
+                        polygonDraw.geometry.type !== 'Point'
+                          ? 'Vui lòng chọn điểm để tiếp tục'
                           : ''
                       }
                     >
@@ -1842,7 +1855,10 @@ const Manager = () => {
                         icon={<PushpinOutlined />}
                         onClick={toggleThemDiemQuanTrac}
                         className={isDrawing ? 'active-draw' : ''}
-                        disabled={!polygonDraw.geometry.coordinates.length}
+                        disabled={
+                          !polygonDraw.geometry.coordinates.length ||
+                          polygonDraw.geometry.type !== 'Point'
+                        }
                       >
                         Thêm ĐQT
                       </Button>
@@ -1871,10 +1887,8 @@ const Manager = () => {
                     Lô chè
                   </Checkbox>
                   <Checkbox
-                    checked={layerVisibility["diem"]}
-                    onChange={(e) =>
-                      handleLayerToggle("diem", e.target.checked)
-                    }
+                    checked={layerVisibility['diem']}
+                    onChange={e => handleLayerToggle('diem', e.target.checked)}
                   >
                     Điểm quan trắc
                   </Checkbox>
@@ -2579,13 +2593,13 @@ const Manager = () => {
               </Card>
             </section>
 
-            <section id='reportPanel' className='audit-section'>
+            <section id='nonghoPanel' className='audit-section'>
               <Card>
                 <div
                   className='card-header'
                   style={{ display: 'flex', justifyContent: 'space-between' }}
                 >
-                  <h3>Nông hộ</h3>
+                  <h3>Quản trị nông hộ</h3>
                   <Button
                     type='primary'
                     icon={<PlusCircleFilled />}
@@ -2606,10 +2620,10 @@ const Manager = () => {
               </Card>
             </section>
 
-            <section id='reportPanel' className='audit-section'>
+            <section id='vungPanel' className='audit-section'>
               <Card>
                 <div className='card-header'>
-                  <h3>Vùng</h3>
+                  <h3>Quản trị vùng</h3>
                 </div>
                 <Table
                   dataSource={dsVung}
@@ -2620,10 +2634,10 @@ const Manager = () => {
               </Card>
             </section>
 
-            <section id='reportPanel' className='audit-section'>
+            <section id='loPanel' className='audit-section'>
               <Card>
                 <div className='card-header'>
-                  <h3>Lô</h3>
+                  <h3>Quản trị lô</h3>
                 </div>
                 <Table
                   dataSource={dsLoChe}
