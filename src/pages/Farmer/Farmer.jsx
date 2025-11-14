@@ -12,6 +12,7 @@ import {
   SettingOutlined,
   UserOutlined as UserIcon,
 } from "@ant-design/icons";
+import { calculateBoundsAndCenter } from "../../common";
 
 // Mapbox token
 mapboxgl.accessToken =
@@ -205,11 +206,30 @@ export default function Farmer() {
   }, []);
 
   // Map initialization
-  useEffect(() => {
+
+  const fetchData = async () => {
+    var center = [0, 0];
+
+    const res = await fetch(
+      "http://103.163.119.247:33612/dataGeoJson?tenbang=vung",
+      {
+        method: "GET",
+      }
+    );
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    if (data) {
+      const result = calculateBoundsAndCenter(data);
+
+      center = result.center;
+    }
+
+    console.log("center", center);
+
     const map = new mapboxgl.Map({
       container: mapDivRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [105.95, 20.25],
+      style: "mapbox://styles/mapbox/standard-satellite",
+      center: center,
       zoom: 11,
     });
 
@@ -360,6 +380,10 @@ export default function Farmer() {
     });
 
     return () => map.remove();
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   // Update layer visibility
@@ -456,7 +480,7 @@ export default function Farmer() {
       <header>
         <div className="brand">
           <div className="logo" aria-hidden="true"></div>
-          <h1>Giám sát chè – Giao diện Nông hộ</h1>
+          <h1>Giám sát chè</h1>
         </div>
         <div className="actions">
           <span className="pill">
