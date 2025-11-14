@@ -874,7 +874,6 @@ const Manager = () => {
         trangthaitrong: trangthaitrong,
         userid: user,
         vungid: vungid,
-        vungid: 1,
         geom: JSON.stringify(polygonDraw.geometry),
       }),
     });
@@ -1390,11 +1389,13 @@ const Manager = () => {
                 <p className="card-desc">mm</p>
               </Card>
               <Card className="info-card">
-                <p className="card-label">Năng suất dự báo</p>
-                <h3 className="card-value text-amber-700">
-                  {fmt.format(data.yieldAvg)}
-                </h3>
-                <p className="card-desc">tấn/ha</p>
+                <a target="_blank" href="https://thangnn.shinyapps.io/vietao/">
+                  <p className="card-label">Năng suất dự báo</p>
+                  <h3 className="card-value text-amber-700">
+                    {fmt.format(data.yieldAvg)}
+                  </h3>
+                  <p className="card-desc">tấn/ha</p>
+                </a>
               </Card>
             </section>
 
