@@ -366,7 +366,7 @@ const Manager = () => {
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/satellite-v9",
+      style: "mapbox://styles/mapbox/standard-satellite",
       center: center,
       zoom: 8.5,
     });
@@ -508,18 +508,44 @@ const Manager = () => {
           "fill-color": [
             "match",
             ["get", "giong"],
-            "Shan",
-            "#B2F5EA",
-            "LDP1",
-            "#FEEBC8",
-            "KimTuyen",
-            "#E9D8FD",
-            /* other */ "#E6FFFA",
+            "Chè Tân Cương",
+            "#A7F3D0",
+            "Trà Shan Tuyết Cổ Thụ",
+            "#FBCFE8",
+            "Trà Mộc Châu",
+            "#FDE68A",
+            "Trà Cầu Đất",
+            "#BFDBFE",
+            "Trà Ô Long Lâm Đồng",
+            "#DDD6FE",
+            "Giống chè TRI777",
+            "#FECACA",
+            "Giống chè PH1",
+            "#FCD34D",
+            "Giống chè LDP1",
+            "#F9A8D4",
+            "Giống chè Shan",
+            "#6EE7B7",
+            "Giống chè Ô Long",
+            "#C7D2FE",
+            "Trà Xanh",
+            "#86EFAC",
+            "Trà Đen",
+            "#A3A3A3",
+            "Trà Ô Long chế biến",
+            "#FBCFE8",
+            "Trà Trắng",
+            "#FAFAF5",
+            "Trà Phổ Nhĩ",
+            "#D6D3D1",
+            "Trà ướp hương",
+            "#FFE4E6",
+
+            /* other */ "#E5E7EB",
           ],
-          "fill-opacity": 0.28,
+          "fill-opacity": 0.9,
         },
       });
-
       // Viền lô (mảnh và hơi tối để nhìn ranh rõ khi zoom gần)
       map.addLayer({
         id: "lo-outline",
@@ -1482,14 +1508,16 @@ const Manager = () => {
                     checked={layerVisibility["lo"]}
                     onChange={(e) => handleLayerToggle("lo", e.target.checked)}
                   >
-                    Điểm khoan trắc
+                    Lô chè
                   </Checkbox>
                   <Checkbox
                     checked={layerVisibility["diem"]}
                     onChange={(e) =>
                       handleLayerToggle("diem", e.target.checked)
                     }
-                  ></Checkbox>
+                  >
+                    Điểm quan trắc
+                  </Checkbox>
                 </div>
                 <Modal
                   title="Tạo khuyến cáo vùng (AOI)"
