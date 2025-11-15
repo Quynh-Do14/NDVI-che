@@ -36,6 +36,7 @@ import {
 } from '@ant-design/icons'
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import { Modal, Form, Input, Select, Alert } from 'antd'
+import { calculateBoundsAndCenter } from '../common'
 
 const { TextArea } = Input
 const { Option } = Select
@@ -316,55 +317,12 @@ const Manager = () => {
     }
   }, [dataChartNDVI])
 
-  const calculateBoundsAndCenter = geojson => {
-    if (!geojson || geojson.type !== 'FeatureCollection') {
-      throw new Error('Input must be a GeoJSON FeatureCollection')
-    }
-
-    let minX = Infinity,
-      minY = Infinity
-    let maxX = -Infinity,
-      maxY = -Infinity
-    let sumX = 0,
-      sumY = 0
-    let count = 0
-
-    geojson.features.forEach(feature => {
-      if (feature.geometry.type === 'Point') {
-        const [x, y] = feature.geometry.coordinates
-
-        if (x < minX) minX = x
-        if (y < minY) minY = y
-        if (x > maxX) maxX = x
-        if (y > maxY) maxY = y
-
-        sumX += x
-        sumY += y
-        count++
-      }
-    })
-
-    const center = [sumX / count, sumY / count] // [lng, lat]
-
-    return {
-      minLng: minX,
-      minLat: minY,
-      maxLng: maxX,
-      maxLat: maxY,
-      boundsArray: [
-        [minX, minY],
-        [maxX, maxY]
-      ],
-      center: center // [lng, lat]
-    }
-  }
-
   const fetchData = async () => {
     if (!mapContainer.current) return
     var center = [0, 0]
 
     const res = await fetch(
-      'http://103.163.119.247:33612/dataGeoJson?tenbang=diem',
+      'http://103.163.119.247:33612/dataGeoJson?tenbang=vung',
       {
         method: 'GET'
       }
@@ -381,7 +339,7 @@ const Manager = () => {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/satellite-v9',
       center: center,
-      zoom: 8.5
+      zoom: 11.5
     })
 
     mapRef.current = map
@@ -586,10 +544,10 @@ const Manager = () => {
         id: 'lo-label',
         type: 'symbol',
         source: 'lo',
-        minzoom: 13,
+        // minzoom: 13,
         layout: {
           'text-field': ['coalesce', ['get', 'tenlo'], 'Lô'],
-          'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 17, 13],
+          // 'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 17, 13],
           'text-anchor': 'center'
         },
         paint: {
@@ -670,13 +628,13 @@ const Manager = () => {
         const p = f.properties || {}
         const html = `
     <div style="font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
-      <div style="font-weight:600; margin-bottom:4px;">${safe(
-        p.ten_vung,
+      <div style="font-weight:600; margin-bottom:4px;padding-top: 20px;">${safe(
+        p.tenvung,
         'Vùng chưa có tên'
       )}</div>
       <div><b>Trạng thái:</b> ${safe(p.tt)}</div>
       <div><b>Diện tích (ha):</b> ${safe(p.dientich)}</div>
-      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.id)}</div>
+      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.idvung)}</div>
     </div>
   `
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map)
@@ -696,13 +654,13 @@ const Manager = () => {
         const p = f.properties || {}
         const html = `
     <div style="font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
-      <div style="font-weight:600; margin-bottom:4px;">${safe(
+      <div style="font-weight:600; margin-bottom:4px;padding-top: 20px;">${safe(
         p.tenlo,
         'Lô'
       )}</div>
       <div><b>Giống:</b> ${safe(p.giong)}</div>
-      <div><b>Diện tích (ha):</b> ${safe(p.dientich)}</div>
-      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.id)}</div>
+      <div><b>Diện tích (ha):</b> ${safe(p.dientichlo)}</div>
+      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.idlo)}</div>
     </div>
   `
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map)
@@ -745,14 +703,14 @@ const Manager = () => {
         // Điểm lẻ: hiển thị popup
         const html = `
     <div style="font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
-      <div style="font-weight:600; margin-bottom:4px;">${safe(
+      <div style="font-weight:600; margin-bottom:4px;padding-top: 20px;">${safe(
         p.tendiem,
         'Điểm quan trắc'
       )}</div>
       <div><b>Toạ độ:</b> ${f.geometry?.coordinates?.[1]?.toFixed?.(
         6
       )}, ${f.geometry?.coordinates?.[0]?.toFixed?.(6)}</div>
-      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.id)}</div>
+      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.ma)}</div>
     </div>
   `
         popup

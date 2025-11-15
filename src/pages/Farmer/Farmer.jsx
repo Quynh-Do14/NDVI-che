@@ -171,12 +171,12 @@ export default function Farmer() {
 
   // State
   const [activeTab, setActiveTab] = useState("log");
-  const [layerVisibility, setLayerVisibility] = useState({
-    plots: true,
-    ndvi: true,
-    alerts: true,
-    incidents: true,
-  });
+ const [layerVisibility, setLayerVisibility] = useState({
+     vung: true,
+     lo: true,
+     diem: true,
+     events: true
+   })
 
   const [selectedPlot, setSelectedPlot] = useState("");
   const [kpiData, setKpiData] = useState({
@@ -211,7 +211,7 @@ export default function Farmer() {
     var center = [0, 0];
 
     const res = await fetch(
-      "http://103.163.119.247:33612/dataGeoJson?tenbang=vung",
+      "http://103.163.119.247:33612/dataGeoJson?tenbang=lo&where=userid=2",
       {
         method: "GET",
       }
@@ -230,154 +230,244 @@ export default function Farmer() {
       container: mapDivRef.current,
       style: "mapbox://styles/mapbox/standard-satellite",
       center: center,
-      zoom: 11,
+      zoom: 12,
     });
 
     mapRef.current = map;
 
-    map.addControl(
-      new mapboxgl.NavigationControl({ visualizePitch: true }),
-      "bottom-right"
-    );
-    map.addControl(
-      new mapboxgl.ScaleControl({ maxWidth: 120, unit: "metric" }),
-      "bottom-left"
-    );
+    map.on('load', () => {
+      map.addSource('lo', {
+        type: 'geojson',
+        data: 'http://103.163.119.247:33612/dataGeoJson?tenbang=lo&where=userid=2',
+        promoteId: 'id'
+      })
+      map.addSource('diem', {
+        type: 'geojson',
+        data: 'http://103.163.119.247:33612/saubenhgeojson',
+        cluster: true,
+        clusterRadius: 40,
+        clusterMaxZoom: 12,
+        promoteId: 'id'
+      })
 
-    map.on("load", () => {
-      const ndviGrid = generateNDVIGrid();
-
-      // Add sources
-      map.addSource("plots", { type: "geojson", data: plots });
-      map.addSource("ndvi", { type: "geojson", data: ndviGrid });
-      map.addSource("advisories", { type: "geojson", data: advisories });
-      map.addSource("incidents", { type: "geojson", data: incidents });
-
-      // Add layers
       map.addLayer({
-        id: "plots-fill",
-        type: "fill",
-        source: "plots",
+        id: 'lo-fill',
+        type: 'fill',
+        source: 'lo',
         paint: {
           "fill-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "ndvi"],
-            0.3,
-            "#fef3c7",
-            0.5,
-            "#a7f3d0",
-            0.7,
-            "#34d399",
+            "match",
+            ["get", "giong"],
+            "Chè Tân Cương",
+            "#A7F3D0",
+            "Trà Shan Tuyết Cổ Thụ",
+            "#FBCFE8",
+            "Trà Mộc Châu",
+            "#FDE68A",
+            "Trà Cầu Đất",
+            "#BFDBFE",
+            "Trà Ô Long Lâm Đồng",
+            "#DDD6FE",
+            "Giống chè TRI777",
+            "#FECACA",
+            "Giống chè PH1",
+            "#FCD34D",
+            "Giống chè LDP1",
+            "#F9A8D4",
+            "Giống chè Shan",
+            "#6EE7B7",
+            "Giống chè Ô Long",
+            "#C7D2FE",
+            "Trà Xanh",
+            "#86EFAC",
+            "Trà Đen",
+            "#A3A3A3",
+            "Trà Ô Long chế biến",
+            "#FBCFE8",
+            "Trà Trắng",
+            "#FAFAF5",
+            "Trà Phổ Nhĩ",
+            "#D6D3D1",
+            "Trà ướp hương",
+            "#FFE4E6",
+
+            /* other */ "#E5E7EB",
           ],
-          "fill-opacity": 0.6,
+          "fill-opacity": 0.9,
         },
       });
-
+      // Viền lô (mảnh và hơi tối để nhìn ranh rõ khi zoom gần)
       map.addLayer({
-        id: "plots-line",
-        type: "line",
-        source: "plots",
+        id: 'lo-outline',
+        type: 'line',
+        source: 'lo',
         paint: {
-          "line-color": "#065f46",
-          "line-width": 1.2,
-        },
-      });
-
-      map.addLayer({
-        id: "ndvi-fill",
-        type: "fill",
-        source: "ndvi",
-        paint: {
-          "fill-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "ndvi"],
+          'line-color': '#4A5568',
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10,
             0.3,
-            "#fee2e2",
-            0.45,
-            "#fde68a",
-            0.6,
-            "#86efac",
-            0.75,
-            "#22c55e",
+            14,
+            0.8,
+            18,
+            1.4
           ],
-          "fill-opacity": 0.35,
-        },
-      });
+          'line-opacity': 0.7
+        }
+      })
 
+      // Nhãn lô: chỉ hiện khi zoom đủ gần
       map.addLayer({
-        id: "advisories-sym",
-        type: "symbol",
-        source: "advisories",
+        id: 'lo-label',
+        type: 'symbol',
+        source: 'lo',
+        // minzoom: 13,
         layout: {
-          "icon-image": "marker-15",
-          "icon-size": 1.2,
-          "text-field": ["get", "title"],
-          "text-size": 12,
-          "text-offset": [0, 1.2],
-          "text-anchor": "top",
+          'text-field': ['coalesce', ['get', 'tenlo'], 'Lô'],
+          // 'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 17, 13],
+          'text-anchor': 'center'
         },
-        paint: { "text-color": "#1f2937" },
-      });
+        paint: {
+          'text-color': '#2D3748',
+          'text-halo-color': '#FFFFFF',
+          'text-halo-width': 1
+        }
+      })
 
+      // Chấm tròn
       map.addLayer({
-        id: "incidents-sym",
-        type: "symbol",
-        source: "incidents",
+        id: 'diem-point',
+        type: 'circle',
+        source: 'diem',
+        paint: {
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            8,
+            4,
+            14,
+            6,
+            18,
+            8
+          ],
+          'circle-color': '#3B82F6', // xanh lam
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-width': 1.2,
+          'circle-opacity': 0.9
+        }
+      })
+
+      // Nhãn tên điểm
+      map.addLayer({
+        id: 'diem-label',
+        type: 'symbol',
+        source: 'diem',
         layout: {
-          "icon-image": "marker-15",
-          "icon-size": 1.2,
-          "text-field": ["get", "type"],
-          "text-size": 12,
-          "text-offset": [0, 1.2],
-          "text-anchor": "top",
+          'text-field': ['get', 'ngay'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 16, 14],
+          'text-offset': [0, 1.2],
+          'text-anchor': 'top'
         },
-        paint: { "text-color": "#991b1b" },
-      });
+        paint: {
+          'text-color': '#1E3A8A',
+          'text-halo-color': '#FFFFFF',
+          'text-halo-width': 1
+        }
+      })
 
-      // Plot click handler
-      map.on("click", "plots-fill", (e) => {
-        const f = e.features[0];
-        const { id, name, area, ndvi } = f.properties;
+      // Tạo 1 popup dùng lại
+      const popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: '320px'
+      })
 
+      // Helper nhỏ
+      const safe = (v, fallback = '—') =>
+        v === null || v === undefined || v === '' ? fallback : v
+
+      // ====== LÔ (polygon) ======
+      map.on(
+        'mouseenter',
+        'lo-fill',
+        () => (map.getCanvas().style.cursor = 'pointer')
+      )
+      map.on('mouseleave', 'lo-fill', () => (map.getCanvas().style.cursor = ''))
+
+      map.on('click', 'lo-fill', e => {
+        const f = e.features?.[0]
+        if (!f) return
+        const p = f.properties || {}
         const html = `
-          <strong>${name}</strong><br/>
-          Mã: ${id} · Diện tích: ${area} ha<br/>
-          NDVI hiện tại: <b>${ndvi}</b><br/>
-          <button id="btn-log-${id}" class="map-popup-btn">Ghi nhật ký</button>
-        `;
+    <div style="font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+      <div style="font-weight:600; margin-bottom:4px;padding-top: 20px;">${safe(
+        p.tenlo,
+        'Lô'
+      )}</div>
+      <div><b>Giống:</b> ${safe(p.giong)}</div>
+      <div><b>Diện tích (ha):</b> ${safe(p.dientichlo)}</div>
+      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.idlo)}</div>
+    </div>
+  `
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map)
+      })
 
-        new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+      // ====== ĐIỂM (point) ======
+      map.on(
+        'mouseenter',
+        'diem-point',
+        () => (map.getCanvas().style.cursor = 'pointer')
+      )
+      map.on(
+        'mouseleave',
+        'diem-point',
+        () => (map.getCanvas().style.cursor = '')
+      )
 
-        // Update KPI
-        setKpiData((prev) => ({ ...prev, ndvi }));
-        setSelectedPlot(id);
-        setLogForm((prev) => ({ ...prev, plot: id }));
-        setIncidentForm((prev) => ({ ...prev, plot: id }));
+      map.on('click', 'diem-point', e => {
+        const f = e.features?.[0]
+        if (!f) return
+        const p = f.properties || {}
 
-        // Add button handler
-        setTimeout(() => {
-          const btn = document.getElementById(`btn-log-${id}`);
-          if (btn) {
-            btn.onclick = () => {
-              setActiveTab("log");
-              document.getElementById("log-note")?.focus();
-            };
+        // Nếu đây là 1 cluster: zoom nở cụm thay vì popup
+        if (p && ('cluster' in p || 'point_count' in p || 'cluster_id' in p)) {
+          const source = map.getSource('diem')
+          const clusterId = p.cluster_id
+          if (
+            source &&
+            typeof source.getClusterExpansionZoom === 'function' &&
+            clusterId !== undefined
+          ) {
+            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+              if (err) return
+              map.easeTo({ center: f.geometry.coordinates, zoom })
+            })
+            return
           }
-        }, 50);
-      });
+        }
 
-      // Fit bounds to plots
-      const coordinates = plots.features.flatMap(
-        (f) => f.geometry.coordinates[0]
-      );
-      const bounds = coordinates.reduce((bounds, coord) => {
-        return bounds.extend(coord);
-      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+        // Điểm lẻ: hiển thị popup
+        const html = `
+    <div style="font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+      <div style="font-weight:600;margin-bottom:4px;padding-top: 20px;">Báo cáo sâu bệnh</div>
+      <div><b>Toạ độ:</b> ${f.geometry?.coordinates?.[1]?.toFixed?.(6)}, ${f.geometry?.coordinates?.[0]?.toFixed?.(6)}</div>
+        <div><b>Ngày:</b> ${p.ngay}</div>
+    <div><b>Mức độ:</b> ${p.mucdo}</div>
+    <div><b>Trạng thái:</b> ${p.trangthai}</div>
+    <div><b>Mô tả:</b> ${p.mota}</div>
+      <div style="margin-top:6px; color:#64748B">ID: ${safe(p.idsaubenh)}</div>
+    </div>
+  `
+        popup
+          .setLngLat(e.lngLat) // hoặc dùng f.geometry.coordinates cho anchor tuyệt đối
+          .setHTML(html)
+          .addTo(map)
+      })
+    })
 
-      map.fitBounds(bounds, { padding: 60 });
-    });
 
     return () => map.remove();
   };
@@ -421,12 +511,29 @@ export default function Farmer() {
   }, [layerVisibility]);
 
   // Handlers
-  const handleLayerToggle = (layer) => {
-    setLayerVisibility((prev) => ({
-      ...prev,
-      [layer]: !prev[layer],
-    }));
-  };
+  const handleLayerToggle = (layer, checked) => {
+    setLayerVisibility(prev => ({ ...prev, [layer]: checked }))
+
+    if (!mapRef.current) return
+
+    // Bật/tắt tất cả layer con tương ứng (fill, outline, label, extrude...)
+    const layerGroups = {
+      lo: ['lo-fill', 'lo-outline', 'lo-label'],
+      diem: ['diem-point', 'diem-label']
+    }
+
+    const targetLayers = layerGroups[layer] || [layer]
+
+    targetLayers.forEach(id => {
+      if (mapRef.current.getLayer(id)) {
+        mapRef.current.setLayoutProperty(
+          id,
+          'visibility',
+          checked ? 'visible' : 'none'
+        )
+      }
+    })
+  }
 
   // Calculate statistics
   const totalArea = plots.features.reduce(
@@ -526,12 +633,12 @@ export default function Farmer() {
               <label>
                 <input
                   type="checkbox"
-                  checked={layerVisibility.plots}
-                  onChange={() => handleLayerToggle("plots")}
+                  checked={layerVisibility['lo']}
+                    onChange={e => handleLayerToggle('lo', e.target.checked)}
                 />
                 Lô chè của tôi
               </label>
-              <label>
+              {/* <label>
                 <input
                   type="checkbox"
                   checked={layerVisibility.ndvi}
@@ -546,17 +653,17 @@ export default function Farmer() {
                   onChange={() => handleLayerToggle("alerts")}
                 />
                 Khuyến cáo
-              </label>
+              </label> */}
               <label>
                 <input
                   type="checkbox"
-                  checked={layerVisibility.incidents}
-                  onChange={() => handleLayerToggle("incidents")}
+                 checked={layerVisibility['diem']}
+                    onChange={e => handleLayerToggle('diem', e.target.checked)}
                 />
                 Sự cố hiện trường
               </label>
             </div>
-            <div className="control">
+            {/* <div className="control">
               <h3>Thông tin nhanh lô</h3>
               <div className="kpi">
                 <div className="metric">
@@ -572,7 +679,7 @@ export default function Farmer() {
                   <div className="val">{kpiData.gdd}</div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </Col>
 
