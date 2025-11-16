@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "./Researcher.css";
+import { Card, Dropdown, Form, Menu, Select } from "antd";
+import { LogoutOutlined, UserOutlined as UserIcon } from "@ant-design/icons";
+import Chart from "chart.js/auto";
 
 // Mapbox token
 mapboxgl.accessToken =
@@ -232,7 +235,8 @@ function downloadFile(content, filename, mime) {
 export default function Researcher() {
   const mapRef = useRef(null);
   const mapDivRef = useRef(null);
-
+  const chartIndicesRef = useRef(null);
+  const indicesChartRef = useRef(null);
   // State
   const [region, setRegion] = useState("all");
   const [plot, setPlot] = useState("all");
@@ -244,6 +248,10 @@ export default function Researcher() {
   const [dateTo, setDateTo] = useState("2025-10-01");
   const [copyMsg, setCopyMsg] = useState(false);
   const [plotOptions, setPlotOptions] = useState([]);
+  const [selectVung, setSelectVung] = useState("");
+  const [dsVung, setDsVung] = useState([]);
+  const [dataChartNDVI, setDataChartNDVI] = useState([]);
+  console.log("dataChartNDVI", dataChartNDVI);
 
   // Time series data
   const timeSeries = useRef({});
@@ -608,6 +616,151 @@ export default function Researcher() {
       (region === "all" || f.properties.region === region) &&
       (plot === "all" || f.properties.pid === plot)
   );
+  console.log("selectVung", selectVung);
+
+  const onGetDataChart = async () => {
+    if (selectVung) {
+      try {
+        const res = await fetch(
+          `http://103.163.119.247:33612/chiso?vungid=${selectVung}`
+          // KHÔNG cần headers với OpenWeatherMap API
+        );
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setDataChartNDVI(data.data);
+      } catch (err) {
+        console.log("Error:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (dataChartNDVI.length) {
+      const days = dataChartNDVI.map((item) => {
+        const date = new Date(item.dt);
+        return date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+        });
+      });
+
+      const ndvi = dataChartNDVI.map((item) => item.ndvi);
+      const evi = dataChartNDVI.map((item) => item.evi);
+      const ndwi = dataChartNDVI.map((item) => item.ndwi);
+      const lai = dataChartNDVI.map((item) => item.lai);
+      const cire = dataChartNDVI.map((item) => item.cire);
+
+      if (chartIndicesRef.current) {
+        const ctx = chartIndicesRef.current.getContext("2d");
+
+        // Hủy chart cũ trước khi vẽ lại
+        if (indicesChartRef.current) indicesChartRef.current.destroy();
+
+        indicesChartRef.current = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: days,
+            datasets: [
+              {
+                label: "NDVI",
+                data: ndvi,
+                borderColor: "#22c55e", // xanh lá sáng
+                backgroundColor: "#22c55e33",
+                tension: 0.3,
+              },
+              {
+                label: "EVI",
+                data: evi,
+                borderColor: "#3b82f6", // xanh dương
+                backgroundColor: "#3b82f633",
+                tension: 0.3,
+              },
+              {
+                label: "NDWI",
+                data: ndwi,
+                borderColor: "#06b6d4", // cyan
+                backgroundColor: "#06b6d433",
+                tension: 0.3,
+              },
+              {
+                label: "LAI",
+                data: lai,
+                borderColor: "#f59e0b", // vàng cam
+                backgroundColor: "#f59e0b33",
+                tension: 0.3,
+              },
+              {
+                label: "CIRE",
+                data: cire,
+                borderColor: "#ef4444", // đỏ
+                backgroundColor: "#ef444433",
+                tension: 0.3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "bottom" },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    `${ctx.dataset.label}: ${fmt.format(ctx.parsed.y)}`,
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 4,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    return () => {
+      indicesChartRef.current?.destroy();
+    };
+  }, [dataChartNDVI]);
+
+  const fetchDataDSVung = async () => {
+    fetch("http://103.163.119.247:33612/vung")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json(); // Chuyển đổi dữ liệu trả về thành JSON
+      })
+      .then((data) => {
+        if (data.success) {
+          setDsVung(data.data);
+        }
+      })
+      .catch((error) => {
+        console.log("error", error);
+      });
+  };
+
+  useEffect(() => {
+    fetchDataDSVung();
+  }, []);
+
+  useEffect(() => {
+    onGetDataChart();
+  }, [selectVung]);
+
+  useEffect(() => {
+    if (dsVung.length) {
+      setSelectVung(dsVung[0].idvung);
+    }
+  }, [dsVung]);
 
   return (
     <div className="app">
@@ -650,9 +803,35 @@ export default function Researcher() {
             Tải GeoJSON
           </button>
         </div>
+        <div className="header-actions">
+          <Dropdown
+            overlay={
+              <Menu>
+                <Menu.Item
+                  key="logout"
+                  icon={<LogoutOutlined />}
+                  danger
+                  onClick={() => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = "/login";
+                  }}
+                >
+                  Đăng xuất
+                </Menu.Item>
+              </Menu>
+            }
+            placement="bottomRight"
+            arrow
+          >
+            <div className="user-avatar" style={{ cursor: "pointer" }}>
+              👤
+            </div>
+          </Dropdown>
+        </div>
       </header>
 
-      <div className="container">
+      <div className="container-researcher">
         <aside className="panel" id="filters">
           <h3>Bộ lọc & tham số</h3>
 
@@ -932,6 +1111,31 @@ export default function Researcher() {
                 })}
               </tbody>
             </table>
+            {/* <section id="indicesPanel" className="charts-section">
+              <div className="chart-main" style={{ width: "100%" }}>
+                <Card>
+                  <div className="card-header">
+                    <h3>Chuỗi chỉ số NDVI / EVI / NDWI (30 ngày)</h3>
+                    <Form.Item label="Chọn vùng">
+                      <Select
+                        placeholder="Chọn vùng"
+                        value={selectVung}
+                        onChange={(val) => setSelectVung(val)}
+                        showSearch
+                        optionFilterProp="children"
+                      >
+                        {dsVung.map((v, i) => (
+                          <Option key={i} value={v.idvung}>
+                            {v.tenvung}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </div>
+                  <canvas ref={chartIndicesRef} height="150" />
+                </Card>
+              </div>
+            </section> */}
           </div>
         </section>
       </div>

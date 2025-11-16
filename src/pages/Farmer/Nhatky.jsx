@@ -114,6 +114,8 @@ const Nhatky = () => {
     fetchDataDSLoChe();
   }, []);
 
+  const user = JSON.parse(sessionStorage.getItem("user"))?.data;
+  
   return (
     <form id="form-log" onSubmit={handleLogSubmit}>
       <div className="row">
@@ -157,11 +159,13 @@ const Nhatky = () => {
           <label>Lô chè</label>
           <select name="plot" value={logForm.plot} onChange={handleInputChange}>
             <option value="">Chọn lô</option>
-            {dsLoChe.map((plot) => (
-              <option key={plot.idlo} value={plot.idlo}>
-                {plot.tenlo}
-              </option>
-            ))}
+            {dsLoChe
+              .filter((item) => item.userid == user.iduser)
+              .map((plot) => (
+                <option key={plot.idlo} value={plot.idlo}>
+                  {plot.tenlo}
+                </option>
+              ))}
           </select>
         </div>
       </div>

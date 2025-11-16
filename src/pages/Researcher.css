@@ -43,6 +43,14 @@ header .title {
   gap: 12px;
 }
 
+.container-researcher {
+    display: grid;
+    grid-template-columns: 431px 1fr;
+    gap: 14px;
+    padding: 14px;
+    height: calc(100vh - 64px);
+    overflow: auto;
+}
 .title-row {
   display: flex;
   align-items: center;
@@ -256,6 +264,7 @@ select {
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+  height: 500px;
 }
 
 .tablehead {

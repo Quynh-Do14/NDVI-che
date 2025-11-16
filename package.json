@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.5.0",
+    "@turf/turf": "^7.2.0",
     "antd": "^5.27.6",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.4.1",

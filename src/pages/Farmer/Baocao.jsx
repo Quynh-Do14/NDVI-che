@@ -119,6 +119,8 @@ const Baocao = ({ activeTab }) => {
     fetchDataDSLoChe();
   }, []);
 
+  const user = JSON.parse(sessionStorage.getItem("user"))?.data;
+
   return (
     <div
       id="tab-report"
@@ -149,11 +151,13 @@ const Baocao = ({ activeTab }) => {
               onChange={handleInputChange}
             >
               <option value="">Chọn lô</option>
-              {dsLoChe.map((plot) => (
-                <option key={plot.idlo} value={plot.idlo}>
-                  {plot.tenlo}
-                </option>
-              ))}
+              {dsLoChe
+                .filter((item) => item.userid == user.iduser)
+                .map((plot) => (
+                  <option key={plot.idlo} value={plot.idlo}>
+                    {plot.tenlo}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
