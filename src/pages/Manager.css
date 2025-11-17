@@ -251,7 +251,7 @@
 
 @media (min-width: 768px) {
   .layer-controls {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
