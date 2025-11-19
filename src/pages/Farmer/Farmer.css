@@ -83,7 +83,8 @@ header .actions {
 .map-container {
   position: relative;
   width: 100%;
-min-height: 420px;}
+  min-height: 420px;
+}
 
 #map {
   width: 100%;
@@ -195,9 +196,9 @@ form label {
   margin-bottom: 4px;
 }
 
-input[type='text'],
-input[type='number'],
-input[type='date'],
+input[type="text"],
+input[type="number"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
@@ -395,4 +396,16 @@ footer {
 
 .list::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.title {
+  color: #111827; /* text-gray-900 */
+  font-size: 14px;
+  font-weight: 600; /* đậm nhẹ để nhìn rõ hơn */
+  line-height: 1.4; /* thoáng hơn */
+  margin-bottom: 4px;
+}
+
+.content {
+  margin-bottom: 12px;
 }

@@ -115,7 +115,7 @@ const Nhatky = () => {
   }, []);
 
   const user = JSON.parse(sessionStorage.getItem("user"))?.data;
-  
+
   return (
     <form id="form-log" onSubmit={handleLogSubmit}>
       <div className="row">
@@ -147,7 +147,17 @@ const Nhatky = () => {
 
       <div className="row">
         <div>
-          <label>Chi phí (VNĐ)</label>
+          <label>
+            {logForm.type == "tuoi"
+              ? "Lượng (Lít)"
+              : logForm.type == "bon"
+              ? "Kilogram (Kg)"
+              : logForm.type == "phun"
+              ? "Lượng (Lít)"
+              : logForm.type == "thu-hai"
+              ? "Kilogram (Kg)"
+              : ""}{" "}
+          </label>
           <input
             type="number"
             name="cost"
