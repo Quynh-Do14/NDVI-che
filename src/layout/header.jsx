@@ -67,7 +67,7 @@ const HeaderComponent = () => {
           </div>
           <div className='logo-text'>
             <h1>Tea Monitor</h1>
-            <span className='tagline'>Hệ thống giám sát sinh trưởng chè</span>
+            <span className='tagline'>Hệ thống quản lý canh tác chè cho vùng Đông Bắc Việt Nam</span>
           </div>
         </div>
 

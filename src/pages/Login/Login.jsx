@@ -122,7 +122,7 @@ export default function Login() {
             </div>
             <div className="login-title">
               <h1>Đăng nhập</h1>
-              <p>Hệ thống giám sát sinh trưởng chè</p>
+              <p>Hệ thống quản lý canh tác chè cho vùng Đông Bắc Việt Nam</p>
             </div>
           </div>
 
