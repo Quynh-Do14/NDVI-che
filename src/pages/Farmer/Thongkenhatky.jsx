@@ -88,7 +88,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Tổng</h5>
             <div className="val">
-              {formatNumber(dataStaticTuoi.tong_chi_phi)}
+              {formatNumber(dataStaticTuoi.tong_chi_phi)} L
             </div>
           </div>
           <div className="metric">
@@ -98,7 +98,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Trung bình</h5>
             <div className="val">
-              {formatNumber(dataStaticTuoi.chi_phi_trung_binh)}
+              {formatNumber(dataStaticTuoi.chi_phi_trung_binh)} L
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Tổng</h5>
             <div className="val">
-              {formatNumber(dataStaticBon.tong_chi_phi)}
+              {formatNumber(dataStaticBon.tong_chi_phi)} Kg
             </div>
           </div>
           <div className="metric">
@@ -120,7 +120,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Trung bình</h5>
             <div className="val">
-              {formatNumber(dataStaticBon.chi_phi_trung_binh)}
+              {formatNumber(dataStaticBon.chi_phi_trung_binh)} Kg
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Tổng</h5>
             <div className="val">
-              {formatNumber(dataStaticPhun.tong_chi_phi)}
+              {formatNumber(dataStaticPhun.tong_chi_phi)} L
             </div>
           </div>
           <div className="metric">
@@ -142,7 +142,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Trung bình</h5>
             <div className="val">
-              {formatNumber(dataStaticPhun.chi_phi_trung_binh)}
+              {formatNumber(dataStaticPhun.chi_phi_trung_binh)} L
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Tổng</h5>
             <div className="val">
-              {formatNumber(dataStaticThuHai.tong_chi_phi)}
+              {formatNumber(dataStaticThuHai.tong_chi_phi)} Kg
             </div>
           </div>
           <div className="metric">
@@ -164,7 +164,7 @@ const Thongkenhatky = ({ activeTab }) => {
           <div className="metric">
             <h5>Trung bình</h5>
             <div className="val">
-              {formatNumber(dataStaticThuHai.chi_phi_trung_binh)}
+              {formatNumber(dataStaticThuHai.chi_phi_trung_binh)} Kg
             </div>
           </div>
         </div>
